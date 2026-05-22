@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the PR Sweep Bot works — feature explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Figtree:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:         #FAF9F7;
+  --surface:    #FFFFFF;
+  --demo-bg:    #F3F2EE;
+  --text:       #2D2D2D;
+  --text-muted: #666666;
+  --border:     #E5E5E0;
+  --accent:     #6366F1;
+  --accent-bg:  #EEF2FF;
+  --good:       #16A34A;
+  --bad:        #DC2626;
+  --warn:       #D97706;
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-sans:  'Figtree', system-ui, sans-serif;
+  --font-mono:  'Source Code Pro', ui-monospace, Menlo, monospace;
+  --radius:     12px;
+  --max-w:      700px;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans); font-size: 17px; line-height: 1.6;
+  color: var(--text); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  padding: 56px 24px 120px;
+}
+.page {
+  max-width: 1060px; margin: 0 auto;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 48px;
+}
+@media (max-width: 920px) { .page { grid-template-columns: 1fr; } nav { display: none; } }
+
+/* ── left nav ── */
+nav { position: sticky; top: 32px; align-self: start; font-size: 13px; }
+nav .label {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
+}
+nav a {
+  display: block; padding: 5px 0 5px 12px;
+  border-left: 2px solid var(--border);
+  color: var(--text-muted); text-decoration: none; font-size: 13px;
+  transition: color 0.1s, border-color 0.1s;
+}
+nav a:hover, nav a.active { color: var(--text); border-color: var(--accent); }
+nav a.l2 { padding-left: 24px; font-size: 12px; }
+nav .files { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px; }
+nav .files code {
+  display: block; font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-muted); padding: 3px 0;
+}
+
+/* ── typography ── */
+.eyebrow {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
+}
+h1 {
+  font-family: var(--font-serif); font-size: clamp(28px, 4vw, 44px);
+  font-weight: 700; letter-spacing: -0.02em; line-height: 1.1;
+  color: var(--text); margin-bottom: 20px;
+}
+h2 {
+  font-family: var(--font-serif); font-size: 21px; font-weight: 500;
+  color: var(--text); margin: 44px 0 14px; scroll-margin-top: 24px;
+}
+p { margin-bottom: 14px; max-width: var(--max-w); }
+code {
+  font-family: var(--font-mono); font-size: 13px;
+  background: var(--demo-bg); padding: 2px 6px; border-radius: 4px;
+}
+
+/* ── tldr ── */
+.tldr {
+  border: 1.5px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: var(--radius); background: var(--surface);
+  padding: 16px 20px; margin: 20px 0; font-size: 15px; line-height: 1.65;
+}
+.tldr b { color: var(--text); }
+
+/* ── flow diagram ── */
+.flow-wrap {
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); padding: 24px; margin: 16px 0;
+}
+.flow-wrap svg { display: block; width: 100%; height: auto; }
+.flow-caption { font-size: 13px; color: var(--text-muted); margin-top: 12px; }
+
+/* path groups: default dim on hover-active state */
+.flow-wrap.hovered .path-group { opacity: 0.25; transition: opacity 0.15s; }
+.flow-wrap.hovered .path-group:hover,
+.flow-wrap.hovered .path-group.lit { opacity: 1; }
+.path-group { cursor: pointer; transition: opacity 0.15s; }
+
+/* ── collapsibles ── */
+details {
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); margin: 12px 0; overflow: hidden;
+}
+details[open] { border-color: var(--accent); }
+summary {
+  list-style: none; cursor: pointer; padding: 14px 18px;
+  font-family: var(--font-serif); font-size: 16px; color: var(--text);
+  display: flex; align-items: baseline; gap: 10px; user-select: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before {
+  content: "▸"; color: var(--accent);
+  font-family: var(--font-sans); font-size: 12px; transition: transform 140ms;
+  flex-shrink: 0;
+}
+details[open] summary::before { transform: rotate(90deg); }
+summary .where {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-muted); margin-left: auto; flex-shrink: 0;
+}
+details .body { padding: 0 18px 18px; }
+details .body p { font-size: 15px; margin-bottom: 10px; }
+
+/* ── tabs ── */
+.tabs {
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); margin: 14px 0; overflow: hidden;
+}
+.tabbar {
+  display: flex; border-bottom: 1px solid var(--border); background: var(--demo-bg);
+}
+.tabbar button {
+  appearance: none; border: none; background: none;
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+  padding: 10px 16px; cursor: pointer; border-right: 1px solid var(--border);
+  transition: color 0.1s;
+}
+.tabbar button.on {
+  background: var(--surface); color: var(--text);
+  border-bottom: 2px solid var(--accent); margin-bottom: -1px;
+}
+.tabs pre {
+  display: none; margin: 0; padding: 16px 18px;
+  font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
+  color: var(--text); overflow-x: auto; tab-size: 2;
+}
+.tabs pre.on { display: block; }
+.hl  { color: var(--accent); }
+.hl2 { color: var(--good); }
+.hl3 { color: var(--warn); }
+.cm  { color: var(--text-muted); font-style: italic; }
+.str { color: #A67C52; }
+
+/* ── inline note badge ── */
+.note {
+  display: inline-block; font-family: var(--font-mono); font-size: 11px;
+  background: var(--accent-bg); color: var(--accent);
+  padding: 2px 8px; border-radius: 99px; margin-left: 6px;
+  vertical-align: middle;
+}
+.note.green { background: #DCFCE7; color: var(--good); }
+.note.amber { background: #FEF3C7; color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ── left nav ── -->
+<nav>
+  <div class="label">Contents</div>
+  <a href="#tldr">TL;DR</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#realtime">Real-time events</a>
+  <a href="#dmpoll" class="l2">DM polling</a>
+  <a href="#search" class="l2">Channel search</a>
+  <a href="#dedup">Deduplication</a>
+  <a href="#spawn">Spawning Claude</a>
+  <div class="files">
+    <div class="label">Key files</div>
+    <code>index.ts</code>
+    <code>package.json</code>
+  </div>
+</nav>
+
+<!-- ── main content ── -->
+<main>
+  <div class="eyebrow">Feature Explainer · venkat/pr-sweep-bot</div>
+  <h1>How the PR Sweep Bot processes Slack events</h1>
+
+  <div class="tldr" id="tldr">
+    <b>TL;DR</b> — A TypeScript/Bun process with <b>three parallel detection paths</b> for finding GitHub PR links in Slack messages. Any path that finds a new PR link fires a single action: spawn <code>claude -p /pr-sweep</code> as a subprocess. A <code>Set&lt;string&gt;</code> of Slack message timestamps prevents double-triggering across paths.
+  </div>
+
+  <!-- ── Architecture diagram ── -->
+  <h2 id="architecture">Architecture</h2>
+  <p>Three paths converge to one action. The paths differ in latency and coverage — they're complementary, not redundant.</p>
+
+  <div class="flow-wrap" id="flow-wrap">
+    <svg viewBox="0 0 640 170" xmlns="http://www.w3.org/2000/svg"
+         font-family="'Source Code Pro', monospace">
+
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#AAAAAA"/>
+        </marker>
+        <marker id="arr-indigo" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#6366F1"/>
+        </marker>
+        <marker id="arr-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#16A34A"/>
+        </marker>
+        <marker id="arr-amber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#D97706"/>
+        </marker>
+      </defs>
+
+      <!-- Slack source box -->
+      <rect x="16" y="65" width="88" height="40" rx="8"
+            fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
+      <text x="60" y="80" text-anchor="middle" font-size="11" fill="#4338CA" font-weight="600">Slack</text>
+      <text x="60" y="95" text-anchor="middle" font-size="10" fill="#6366F1">messages</text>
+
+      <!-- Fan-out lines from Slack -->
+      <path d="M104,85 Q132,34 162,34"   stroke="#CCCCCC" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+      <path d="M104,85 L162,85"           stroke="#CCCCCC" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+      <path d="M104,85 Q132,136 162,136"  stroke="#CCCCCC" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+      <!-- Path 1: Socket Mode (indigo) -->
+      <g class="path-group" id="pg-socket" data-target="realtime">
+        <rect x="162" y="16" width="136" height="38" rx="8"
+              fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
+        <text x="230" y="31" text-anchor="middle" font-size="11" fill="#4338CA" font-weight="600">Socket Mode</text>
+        <text x="230" y="46" text-anchor="middle" font-size="10" fill="#6366F1">instant · app.message</text>
+        <path d="M298,35 Q360,35 388,72" stroke="#6366F1" stroke-width="1.5" fill="none" marker-end="url(#arr-indigo)"/>
+      </g>
+
+      <!-- Path 2: DM Poll (green) -->
+      <g class="path-group" id="pg-poll" data-target="dmpoll">
+        <rect x="162" y="67" width="136" height="38" rx="8"
+              fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="230" y="82" text-anchor="middle" font-size="11" fill="#15803D" font-weight="600">DM Polling</text>
+        <text x="230" y="97" text-anchor="middle" font-size="10" fill="#16A34A">every 2 min · history API</text>
+        <path d="M298,86 L388,86" stroke="#16A34A" stroke-width="1.5" fill="none" marker-end="url(#arr-green)"/>
+      </g>
+
+      <!-- Path 3: Channel Search (amber) -->
+      <g class="path-group" id="pg-search" data-target="search">
+        <rect x="162" y="118" width="136" height="38" rx="8"
+              fill="#FEF3C7" stroke="#D97706" stroke-width="1.5"/>
+        <text x="230" y="133" text-anchor="middle" font-size="11" fill="#92400E" font-weight="600">Channel Search</text>
+        <text x="230" y="148" text-anchor="middle" font-size="10" fill="#D97706">every 2 min · search API</text>
+        <path d="M298,137 Q360,137 388,100" stroke="#D97706" stroke-width="1.5" fill="none" marker-end="url(#arr-amber)"/>
+      </g>
+
+      <!-- Dedup node -->
+      <circle cx="418" cy="86" r="28" fill="#F3F2EE" stroke="#AAAAAA" stroke-width="1.5"/>
+      <text x="418" y="82" text-anchor="middle" font-size="10" fill="#555" font-weight="600">seen</text>
+      <text x="418" y="95" text-anchor="middle" font-size="10" fill="#555">Set</text>
+
+      <!-- Arrow to Claude -->
+      <path d="M446,86 L510,86" stroke="#AAAAAA" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+      <!-- Claude box -->
+      <rect x="510" y="66" width="114" height="40" rx="8"
+            fill="#FDF0EB" stroke="#D97757" stroke-width="1.5"/>
+      <text x="567" y="81" text-anchor="middle" font-size="11" fill="#92400E" font-weight="600">claude -p</text>
+      <text x="567" y="96" text-anchor="middle" font-size="10" fill="#D97757">/pr-sweep</text>
+    </svg>
+    <p class="flow-caption">Hover a path to focus it. Click to jump to that section.</p>
+  </div>
+
+  <!-- ── Detection paths ── -->
+  <h2 id="realtime">Detection paths</h2>
+
+  <details open id="det-realtime">
+    <summary>1 · Real-time events via Socket Mode <span class="where">index.ts:145–162</span></summary>
+    <div class="body">
+      <p>The Slack Bolt <code>app</code> connects over WebSocket (Socket Mode) and fires <code>app.message</code> for every message in channels the bot is invited to. It triggers <em>immediately</em> — no polling lag.</p>
+      <p>Two conditions must be true: the message is either a DM or mentions <code>@Venkateshwaran</code>, <em>and</em> it contains a GitHub PR link (or the word "review").</p>
+      <div class="tabs">
+        <div class="tabbar">
+          <button class="on" onclick="tab(this,'sm-ts')">index.ts</button>
+          <button onclick="tab(this,'sm-why')">Why Socket Mode?</button>
+        </div>
+        <pre id="sm-ts" class="on"><span class="cm">// index.ts:145</span>
+<span class="hl">app</span>.<span class="hl2">message</span>(<span class="hl">async</span> ({ message }) => {
+  <span class="hl">if</span> (message.subtype) <span class="hl">return</span>;           <span class="cm">// skip edits, joins, etc</span>
+  <span class="hl">const</span> isDM      = msg.channel_type === <span class="str">"im"</span>;
+  <span class="hl">const</span> mentionsMe = text.includes(<span class="str">`&lt;@${MY_USER_ID}&gt;`</span>);
+
+  <span class="hl">if</span> (!isDM && !mentionsMe) <span class="hl">return</span>;      <span class="cm">// must be a DM or @-mention</span>
+  <span class="hl">if</span> (msg.user === MY_USER_ID) <span class="hl">return</span>;    <span class="cm">// ignore own messages</span>
+
+  <span class="hl">const</span> prLinks = extractPRLinks(text);
+  <span class="hl">if</span> (prLinks.length === 0 && !text.toLowerCase().includes(<span class="str">"review"</span>)) <span class="hl">return</span>;
+  <span class="hl">if</span> (seen.has(msg.ts)) <span class="hl">return</span>;           <span class="cm">// already handled</span>
+
+  seen.add(msg.ts);
+  <span class="hl">setImmediate</span>(() => runPRSweep(...));
+});</pre>
+        <pre id="sm-why"><span class="cm">// Socket Mode vs HTTP endpoints
+//
+// Traditional Slack bots need a public HTTPS endpoint for events.
+// Socket Mode opens an outbound WebSocket instead — no inbound port,
+// no ngrok, no cloud deploy needed.
+//
+// Trade-off: requires SLACK_APP_TOKEN (app-level token),
+// and only receives events in channels the bot is invited to.
+// That's why polling exists as a fallback for DMs.</span></pre>
+      </div>
+    </div>
+  </details>
+
+  <details id="det-dmpoll">
+    <summary>2 · DM polling via <code>conversations.history</code> <span class="where">index.ts:51–98</span></summary>
+    <div class="body">
+      <p>Runs every 2 minutes using the <em>user token</em> (not the bot token) so it can read all DMs — even ones the bot isn't a member of. It calls <code>conversations.list</code> to enumerate DMs, then <code>conversations.history</code> on each to fetch messages since the last poll.</p>
+      <p><span class="note">Why user token?</span> The bot token only sees channels it's invited to. The user token reads as you — your DMs, your private channels. That's why there are two separate clients in the file.</p>
+      <div class="tabs">
+        <div class="tabbar">
+          <button class="on" onclick="tab(this,'dm-ts')">index.ts</button>
+          <button onclick="tab(this,'dm-vs')">vs search.messages</button>
+        </div>
+        <pre id="dm-ts" class="on"><span class="cm">// index.ts:51 — userClient reads as you</span>
+<span class="hl">async function</span> <span class="hl2">pollDMs</span>() {
+  <span class="hl">const</span> listRes = <span class="hl">await</span> userClient.conversations.list({
+    types: <span class="str">"im,mpim"</span>,          <span class="cm">// 1:1 DMs + group DMs</span>
+    exclude_archived: <span class="hl">true</span>,
+    limit: 100,
+  });
+
+  <span class="hl">for</span> (<span class="hl">const</span> channel <span class="hl">of</span> listRes.channels) {
+    <span class="hl">const</span> histRes = <span class="hl">await</span> userClient.conversations.history({
+      channel: channel.id,
+      oldest: String(lastPollTs),  <span class="cm">// only fetch new messages</span>
+      limit: 20,
+    });
+
+    <span class="hl">for</span> (<span class="hl">const</span> msg <span class="hl">of</span> histRes.messages) {
+      <span class="hl">if</span> (seen.has(msg.ts)) <span class="hl">continue</span>;
+      <span class="hl">const</span> prLinks = extractPRLinks(msg.text);
+      <span class="hl">if</span> (prLinks.length > 0) {
+        seen.add(msg.ts);
+        <span class="hl">setImmediate</span>(() => runPRSweep(...));
+        <span class="hl">return</span>;                  <span class="cm">// one trigger per poll</span>
+      }
+    }
+  }
+}</pre>
+        <pre id="dm-vs"><span class="cm">// Why not use search.messages for DMs?
+//
+// search.messages is indexed asynchronously — new messages can take
+// 5–10 minutes to appear in search results. That's the exact problem
+// this bot was built to avoid (slow PR review turnaround).
+//
+// conversations.history is real-time: it reads the raw message store,
+// not the search index. So DM polling uses history, not search.
+//
+// Channel messages use search.messages as a fallback only because
+// conversations.history on a channel requires the bot to be a member.</span></pre>
+      </div>
+    </div>
+  </details>
+
+  <details id="det-search">
+    <summary>3 · Channel search via <code>search.messages</code> <span class="where">index.ts:101–137</span></summary>
+    <div class="body">
+      <p>Covers public channels and channels the bot hasn't been invited to. Searches for <code>github.com/pull</code> and filters by recency. Results can lag 5–10 minutes behind real-time — it's the fallback path, not the primary.</p>
+      <p>DMs are explicitly skipped here (<code>is_im || is_mpim</code>) since <code>pollDMs</code> handles those faster.</p>
+      <div class="tabs">
+        <div class="tabbar">
+          <button class="on" onclick="tab(this,'sr-ts')">index.ts</button>
+        </div>
+        <pre id="sr-ts" class="on"><span class="cm">// index.ts:101</span>
+<span class="hl">async function</span> <span class="hl2">searchChannels</span>() {
+  <span class="hl">const</span> res = <span class="hl">await</span> userClient.search.messages({
+    query:    <span class="str">"github.com/pull"</span>,
+    sort:     <span class="str">"timestamp"</span>,
+    sort_dir: <span class="str">"desc"</span>,
+    count: 20,
+  });
+
+  <span class="hl">for</span> (<span class="hl">const</span> msg <span class="hl">of</span> res.messages.matches) {
+    <span class="hl">if</span> (seen.has(msg.ts)) <span class="hl">continue</span>;
+    <span class="hl">if</span> (parseFloat(msg.ts) < oldest) <span class="hl">break</span>;  <span class="cm">// past the window</span>
+
+    <span class="cm">// Skip DMs — pollDMs() handles those with lower latency</span>
+    <span class="hl">if</span> (msg.channel?.is_im || msg.channel?.is_mpim) <span class="hl">continue</span>;
+    <span class="hl">if</span> (msg.user === MY_USER_ID) <span class="hl">continue</span>;
+
+    seen.add(msg.ts);
+    <span class="hl">setImmediate</span>(() => runPRSweep(...));
+    <span class="hl">return</span>;
+  }
+}</pre>
+      </div>
+    </div>
+  </details>
+
+  <!-- ── Deduplication ── -->
+  <h2 id="dedup">Deduplication</h2>
+  <p>All three paths share one <code>Set&lt;string&gt;</code>. Slack message timestamps (<code>ts</code>) are globally unique — no two messages ever share one. The set grows in memory for the lifetime of the process and is never flushed, which is fine since the bot is typically restarted daily by <code>launchd</code>.</p>
+
+  <details id="det-dedup">
+    <summary>4 · The <code>seen</code> Set <span class="where">index.ts:19–21</span></summary>
+    <div class="body">
+      <p>A single check at each detection point prevents Socket Mode, DM polling, and channel search from all firing for the same message.</p>
+      <div class="tabs">
+        <div class="tabbar">
+          <button class="on" onclick="tab(this,'dd-ts')">index.ts</button>
+          <button onclick="tab(this,'dd-alt')">Alternatives</button>
+        </div>
+        <pre id="dd-ts" class="on"><span class="cm">// index.ts:19</span>
+<span class="hl">const</span> seen = <span class="hl">new</span> Set&lt;string&gt;();   <span class="cm">// ts → already triggered</span>
+<span class="hl">let</span> lastPollTs = Math.floor((Date.now() - POLL_INTERVAL_MS) / 1000);
+
+<span class="cm">// Every detection path does the same two lines before firing:</span>
+<span class="hl">if</span> (seen.has(msg.ts)) <span class="hl">continue</span>;   <span class="cm">// skip if seen</span>
+seen.add(msg.ts);                    <span class="cm">// mark before spawning</span>
+<span class="hl">setImmediate</span>(() => runPRSweep(context));</pre>
+        <pre id="dd-alt"><span class="cm">// Why an in-memory Set and not a DB or file?
+//
+// The bot is single-process and single-host (runs on your Mac via launchd).
+// There's no concurrent writes to worry about — Node/Bun's event loop
+// is single-threaded, so Set ops are atomically safe.
+//
+// A SQLite DB would survive restarts, but also risks re-triggering on
+// old PRs after a reboot. The in-memory Set is intentionally ephemeral:
+// each new session starts fresh, matching the poll window.</span></pre>
+      </div>
+    </div>
+  </details>
+
+  <!-- ── Spawning Claude ── -->
+  <h2 id="spawn">Spawning Claude</h2>
+  <p>When any path fires, it calls <code>runPRSweep()</code>. A mutex flag (<code>sweepRunning</code>) ensures only one Claude process runs at a time — if a second trigger arrives while a sweep is in progress, it's dropped.</p>
+
+  <details id="det-spawn">
+    <summary>5 · <code>Bun.spawn</code> + <code>/pr-sweep</code> <span class="where">index.ts:28–47</span></summary>
+    <div class="body">
+      <p>Spawns <code>claude -p /pr-sweep 30 minutes</code> as a subprocess with the full environment inherited. stdout/stderr are piped to the parent process so logs appear in the same terminal window.</p>
+      <div class="tabs">
+        <div class="tabbar">
+          <button class="on" onclick="tab(this,'sp-bun')">Bun.spawn</button>
+          <button onclick="tab(this,'sp-node')">Node equivalent</button>
+        </div>
+        <pre id="sp-bun" class="on"><span class="cm">// index.ts:28</span>
+<span class="hl">let</span> sweepRunning = <span class="hl">false</span>;
+
+<span class="hl">function</span> <span class="hl2">runPRSweep</span>(context: string) {
+  <span class="hl">if</span> (sweepRunning) <span class="hl">return</span>;   <span class="cm">// one sweep at a time</span>
+  sweepRunning = <span class="hl">true</span>;
+
+  <span class="hl">const</span> proc = Bun.<span class="hl2">spawn</span>(
+    [CLAUDE_PATH, <span class="str">"-p"</span>, <span class="str">"/pr-sweep 30 minutes"</span>],
+    { env: { ...process.env } as Record&lt;string, string&gt;,
+      stdout: <span class="str">"inherit"</span>, stderr: <span class="str">"inherit"</span> }
+  );
+
+  proc.exited.then(code => {
+    sweepRunning = <span class="hl">false</span>;
+    console.log(<span class="str">`[pr-sweep] Done (exit ${code})`</span>);
+  });
+}</pre>
+        <pre id="sp-node"><span class="cm">// Node.js child_process equivalent</span>
+<span class="hl">import</span> { spawn } <span class="hl">from</span> <span class="str">"child_process"</span>;
+
+<span class="hl">function</span> <span class="hl2">runPRSweep</span>(context: string) {
+  <span class="hl">if</span> (sweepRunning) <span class="hl">return</span>;
+  sweepRunning = <span class="hl">true</span>;
+
+  <span class="hl">const</span> proc = <span class="hl2">spawn</span>(
+    CLAUDE_PATH,
+    [<span class="str">"-p"</span>, <span class="str">"/pr-sweep 30 minutes"</span>],
+    { env: process.env, stdio: <span class="str">"inherit"</span> }
+  );
+
+  proc.on(<span class="str">"close"</span>, code => {
+    sweepRunning = <span class="hl">false</span>;
+    console.log(<span class="str">`[pr-sweep] Done (exit ${code})`</span>);
+  });
+}</pre>
+      </div>
+      <p style="margin-top:14px;">The key difference: <code>Bun.spawn</code> returns a promise-based <code>proc.exited</code> — no event listener boilerplate. Same semantics, half the lines.</p>
+    </div>
+  </details>
+
+</main>
+</div><!-- .page -->
+
+<script>
+// ── Tabs
+function tab(btn, id) {
+  const tabs = btn.closest('.tabs');
+  tabs.querySelectorAll('.tabbar button').forEach(b => b.classList.remove('on'));
+  tabs.querySelectorAll('pre').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById(id).classList.add('on');
+}
+
+// ── Flow diagram hover: dim other paths, make hovered path crisp
+const flowWrap = document.getElementById('flow-wrap');
+const pathGroups = flowWrap.querySelectorAll('.path-group');
+
+pathGroups.forEach(g => {
+  g.addEventListener('mouseenter', () => {
+    flowWrap.classList.add('hovered');
+    g.classList.add('lit');
+  });
+  g.addEventListener('mouseleave', () => {
+    flowWrap.classList.remove('hovered');
+    g.classList.remove('lit');
+  });
+  g.addEventListener('click', () => {
+    const target = g.dataset.target;
+    const section = document.getElementById('det-' + target);
+    if (section) {
+      section.open = true;
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// ── Highlight active nav link on scroll
+const sections = document.querySelectorAll('h2[id], .tldr[id]');
+const navLinks  = document.querySelectorAll('nav a');
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`nav a[href="#${e.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
