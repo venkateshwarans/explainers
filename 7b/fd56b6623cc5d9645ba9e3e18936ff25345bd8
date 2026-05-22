@@ -1,0 +1,9 @@
+pr-sweep-week-22-status-report.html
+  ai_agent 120,122,157
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "7bfd56b6623cc5d9645ba9e3e18936ff25345bd8",
+  "prompts": {}
+}
