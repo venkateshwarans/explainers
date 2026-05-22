@@ -1,0 +1,19 @@
+index.html
+  s_24fb2e148233d6::t_39d4a880c1fe1b 238-244
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "435951b6d8f8f74092df5ea9075f2e092f9aa19b",
+  "prompts": {},
+  "sessions": {
+    "s_24fb2e148233d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a2ee234a-9ebd-4135-bd32-03e3ccbdcdab",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Venkateshwaran Selvaraj <venkateshwaran.selvaraj+github@gmail.com>"
+    }
+  }
+}
