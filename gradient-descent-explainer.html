@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gradient Descent — an interactive explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Figtree:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #FAF9F7;
+  --surface:   #FFFFFF;
+  --demo-bg:   #F3F2EE;
+  --text:      #2D2D2D;
+  --text-muted:#666666;
+  --border:    #E5E5E0;
+  --accent:    #6366F1;
+  --accent-bg: #EEF2FF;
+  --good:      #16A34A;
+  --bad:       #DC2626;
+  --warn:      #D97706;
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-sans:  'Figtree', system-ui, -apple-system, sans-serif;
+  --font-mono:  'Source Code Pro', ui-monospace, Menlo, Consolas, monospace;
+  --radius:     12px;
+  --max-w:      700px;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  font-size: 17px; line-height: 1.6;
+  color: var(--text); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  padding: 56px 24px 120px;
+}
+.page {
+  max-width: 1060px; margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 48px;
+}
+@media (max-width: 900px) {
+  .page { grid-template-columns: 1fr; }
+  aside { order: -1; position: static !important; }
+}
+
+/* ── typography ── */
+.eyebrow {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 12px;
+}
+h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 700; letter-spacing: -0.02em;
+  color: var(--text); margin-bottom: 16px; line-height: 1.1;
+}
+h2 {
+  font-family: var(--font-serif);
+  font-size: 22px; font-weight: 500;
+  color: var(--text); margin: 44px 0 14px;
+}
+p { margin-bottom: 14px; max-width: var(--max-w); }
+code {
+  font-family: var(--font-mono); font-size: 13px;
+  background: var(--demo-bg); padding: 2px 6px; border-radius: 4px;
+}
+.lead { font-size: 19px; line-height: 1.5; color: var(--text-muted); max-width: 620px; margin-bottom: 20px; }
+.term { border-bottom: 1.5px dotted var(--accent); cursor: help; color: inherit; }
+
+/* ── callout ── */
+.callout {
+  border: 1.5px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 16px 20px; margin: 20px 0; font-size: 15px; line-height: 1.6;
+}
+
+/* ── demo ── */
+.demo {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 24px; margin: 16px 0;
+}
+
+/* ── controls ── */
+.controls { font-family: var(--font-sans); font-size: 14px; }
+.controls .row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.controls label {
+  width: 82px; color: var(--text-muted);
+  font-size: 11px; font-family: var(--font-mono);
+  text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0;
+}
+input[type=range] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+.val { font-family: var(--font-mono); font-size: 13px; color: var(--text); width: 44px; text-align: right; flex-shrink: 0; }
+.btn-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+button {
+  appearance: none; border: 1.5px solid var(--border);
+  background: var(--demo-bg); border-radius: 8px;
+  font-family: var(--font-mono); font-size: 12px;
+  padding: 7px 14px; cursor: pointer; transition: background 0.1s;
+}
+button:hover { background: var(--border); }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+button.primary:hover { background: #4F46E5; border-color: #4F46E5; }
+button:disabled { opacity: 0.4; cursor: default; }
+
+/* ── readout ── */
+.readout {
+  display: flex; gap: 20px; flex-wrap: wrap;
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+}
+.readout span b { color: var(--text); }
+#r-loss.diverged { color: var(--bad); font-weight: 700; }
+
+/* ── canvas ── */
+canvas.loss-canvas {
+  display: block; width: 100%; height: 280px;
+  border-radius: 8px; border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+canvas.mini-canvas {
+  display: block; width: 100%; height: 120px;
+  border-radius: 6px; border: 1px solid var(--border);
+}
+
+/* ── formula block ── */
+.formula {
+  font-family: var(--font-mono); font-size: 15px;
+  background: var(--demo-bg); padding: 14px 18px;
+  border-radius: 8px; display: inline-block;
+  margin-bottom: 16px; line-height: 1.8; color: var(--text);
+}
+
+/* ── compare grid ── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px; margin: 16px 0;
+}
+.compare-cell {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 12px; text-align: center;
+}
+.compare-cell h4 {
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted); margin-bottom: 8px;
+}
+.compare-cell .result {
+  font-family: var(--font-mono); font-size: 11px;
+  font-weight: 600; margin-top: 8px;
+}
+.result.good { color: var(--good); }
+.result.warn { color: var(--warn); }
+.result.bad  { color: var(--bad);  }
+
+/* ── table ── */
+table { border-collapse: collapse; width: 100%; max-width: var(--max-w); font-size: 14px; margin: 16px 0; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+th { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+td.good { color: var(--good); }
+td.bad  { color: var(--bad);  }
+td.warn { color: var(--warn); }
+
+/* ── glossary sidebar ── */
+aside {
+  position: sticky; top: 32px; align-self: start;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); padding: 18px 18px 8px;
+}
+aside .label {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 14px;
+}
+aside dl dt {
+  font-family: var(--font-serif); font-size: 15px;
+  color: var(--text); margin-top: 10px; cursor: default;
+}
+aside dl dt.hl, aside dl dt.hl + dd {
+  background: rgba(99,102,241,0.08);
+  margin-left: -8px; margin-right: -8px;
+  padding-left: 8px; padding-right: 8px; border-radius: 4px;
+}
+aside dl dd { font-size: 12.5px; color: var(--text-muted); margin: 3px 0 12px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<main>
+  <div class="eyebrow">Interactive Explainer · ML / Optimization</div>
+  <h1>Gradient<br>Descent</h1>
+  <p class="lead">The algorithm behind almost every neural network — and the one idea that unlocks the rest of ML.</p>
+
+  <div class="callout">
+    <b>TL;DR</b> — Given a function you want to minimize (your model's prediction error), gradient descent repeatedly asks: <em>which direction is steepest downhill from here?</em> Then takes a small step that way. Repeat until you hit a valley. The critical tuning knob is how big each step should be.
+  </div>
+
+  <h2>The intuition</h2>
+  <p>
+    Imagine you're blindfolded on a hilly landscape and want to reach the lowest valley.
+    You can't see the terrain, but you <em>can</em> feel which way the ground slopes under your feet.
+    So you step in the steepest downhill direction, feel the slope again, step again.
+    That's gradient descent — navigating a high-dimensional space using only local slope.
+  </p>
+  <p>
+    In ML, the "landscape" is your model's <span class="term" data-term="loss">loss function</span> — a scalar measuring prediction error. Each axis of the landscape is a model <span class="term" data-term="param">parameter</span> (a weight or bias). You want the bottom of the valley: the weights that minimize error.
+  </p>
+
+  <h2>Tune it — drag the learning rate</h2>
+  <div class="demo">
+    <canvas id="main-canvas" class="loss-canvas"></canvas>
+    <div class="controls">
+      <div class="row">
+        <label>learn rate</label>
+        <input type="range" id="lr-slider" min="0.005" max="0.145" step="0.005" value="0.08">
+        <span class="val" id="lr-val">0.080</span>
+      </div>
+      <div class="row">
+        <label>momentum</label>
+        <input type="range" id="mom-slider" min="0" max="0.95" step="0.05" value="0">
+        <span class="val" id="mom-val">0.00</span>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="primary" id="run-btn">▶ Run</button>
+      <button id="step-btn">Step →</button>
+      <button id="reset-btn">↺ Reset</button>
+    </div>
+    <div class="readout">
+      <span>step <b id="r-step">0</b></span>
+      <span>x <b id="r-x">−5.000</b></span>
+      <span>y <b id="r-y">3.000</b></span>
+      <span>loss <b id="r-loss">97.000</b></span>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-top:14px;">
+      Contour ellipses show the loss surface <code>f = x² + 8y²</code>. The ball rolls toward the center. Try <b>lr &gt; 0.125</b> to watch it diverge — that's the exact critical point where <code>|1 − 16·lr| = 1</code>.
+    </p>
+  </div>
+
+  <h2>How it works</h2>
+  <p>
+    For a loss <code>L(θ)</code>, the <span class="term" data-term="gradient">gradient</span> <code>∇L</code> is a vector pointing in the steepest-<em>uphill</em> direction. Gradient descent steps opposite to it:
+  </p>
+  <div class="formula">θ<sub>t+1</sub> = θ<sub>t</sub> − η · ∇L(θ<sub>t</sub>)</div>
+  <p>
+    where <code>η</code> (eta) is the <span class="term" data-term="lr">learning rate</span>. For the demo above, <code>∇f = (2x,  16y)</code> — a simple linear gradient. The y-axis has 8× stronger curvature, which is why it zigzags in y and converges smoothly in x. In real networks, the loss landscape is billions of dimensions deep and far noisier, but the same sensitivity to <code>η</code> dominates.
+  </p>
+
+  <h2>Why learning rate is the hardest dial</h2>
+  <p>Three runs from the same starting point — the only difference is <code>η</code>:</p>
+
+  <div class="compare-grid">
+    <div class="compare-cell">
+      <h4>η = 0.02 — too small</h4>
+      <canvas id="mini-a" class="mini-canvas"></canvas>
+      <div class="result warn" id="res-a">running…</div>
+    </div>
+    <div class="compare-cell">
+      <h4>η = 0.08 — good</h4>
+      <canvas id="mini-b" class="mini-canvas"></canvas>
+      <div class="result good" id="res-b">running…</div>
+    </div>
+    <div class="compare-cell">
+      <h4>η = 0.13 — too large</h4>
+      <canvas id="mini-c" class="mini-canvas"></canvas>
+      <div class="result bad" id="res-c">running…</div>
+    </div>
+  </div>
+
+  <h2>Momentum — smoothing out the zigzag</h2>
+  <p>
+    Vanilla GD bounces in narrow valleys because it responds only to the current slope. <span class="term" data-term="momentum">Momentum</span> adds a velocity term — the optimizer builds up speed in consistent directions and resists reversals:
+  </p>
+  <div class="formula">v<sub>t</sub> = β · v<sub>t−1</sub> + (1−β) · ∇L(θ<sub>t</sub>)<br>θ<sub>t+1</sub> = θ<sub>t</sub> − η · v<sub>t</sub></div>
+  <p>Try <b>momentum ≥ 0.7</b> in the demo above — the zigzag collapses into a smooth arc, and you can use a higher learning rate without diverging.</p>
+
+  <h2>Variants in the wild</h2>
+  <table>
+    <thead><tr><th>Algorithm</th><th>Key idea</th><th>Trade-off</th><th>Where used</th></tr></thead>
+    <tbody>
+      <tr><td><b>SGD</b></td><td>one sample at a time</td><td class="warn">noisy but cheap</td><td>Large datasets</td></tr>
+      <tr><td><b>SGD + Momentum</b></td><td>gradient EMA</td><td class="good">less zigzag, faster</td><td>Image models (ResNet)</td></tr>
+      <tr><td><b>RMSProp</b></td><td>per-param adaptive lr</td><td class="good">handles sparse grads</td><td>RNNs, RL</td></tr>
+      <tr><td><b>Adam</b></td><td>momentum + RMSProp</td><td class="good">robust default</td><td>Transformers, LLMs</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Where you'll meet it</h2>
+  <p>
+    Every LLM you've used was trained by <span class="term" data-term="adam">Adam</span> running gradient descent for trillions of steps across billions of parameters. The loss function measures how surprised the model is by the next token. Each step nudges the weights fractionally toward better predictions. After enough steps, those weights encode a working model of language.
+  </p>
+  <p>
+    Outside ML: energy minimization in physics simulations, utility optimization in economics, topology optimization in structural engineering — any continuous parameter search where you can compute a gradient.
+  </p>
+</main>
+
+<!-- ── Glossary sidebar ── -->
+<aside>
+  <div class="label">Key Terms</div>
+  <dl id="gloss">
+    <dt data-g="loss">Loss function</dt>
+    <dd>Scalar measuring prediction error. Gradient descent minimizes it.</dd>
+
+    <dt data-g="gradient">Gradient ∇L</dt>
+    <dd>Vector of partial derivatives — points uphill. GD steps opposite to it.</dd>
+
+    <dt data-g="lr">Learning rate η</dt>
+    <dd>Step size. Too large → diverge. Too small → slow. The most critical hyperparameter.</dd>
+
+    <dt data-g="param">Parameters</dt>
+    <dd>Numbers the model learns — neural network weights and biases.</dd>
+
+    <dt data-g="momentum">Momentum β</dt>
+    <dd>Exponential average of past gradients. Smooths updates; lets the optimizer gather speed.</dd>
+
+    <dt data-g="converge">Convergence</dt>
+    <dd>When loss stops decreasing — the optimizer found a (local) minimum.</dd>
+
+    <dt data-g="adam">Adam</dt>
+    <dd>Momentum + adaptive per-param learning rates. Default optimizer for most deep learning today.</dd>
+
+    <dt data-g="saddle">Saddle point</dt>
+    <dd>∇L = 0 but not a minimum: downhill in some directions, uphill in others.</dd>
+  </dl>
+</aside>
+
+</div><!-- .page -->
+<script>
+// ── Loss landscape: f(x,y) = x² + 8y², min at (0,0)
+// ── Gradient: ∂f/∂x = 2x,  ∂f/∂y = 16y
+// ── Stability: converges iff lr < 2/max_eigenvalue = 2/16 = 0.125
+
+const XMIN = -6.5, XMAX = 6.5, YMIN = -4, YMAX = 4;
+const START = { x: -5, y: 3 };
+const LEVELS = [0.5, 2, 6, 14, 26, 42, 62];
+
+function loss(x, y)  { return x * x + 8 * y * y; }
+function gradX(x)    { return 2 * x; }
+function gradY(y)    { return 16 * y; }
+
+function toCanvas(mx, my, W, H) {
+  return [
+    (mx - XMIN) / (XMAX - XMIN) * W,
+    (YMAX - my) / (YMAX - YMIN) * H
+  ];
+}
+
+// ── Draw the contour-ellipse loss landscape
+function drawLandscape(ctx, W, H) {
+  ctx.fillStyle = '#F7F7F5';
+  ctx.fillRect(0, 0, W, H);
+
+  const [cx, cy] = toCanvas(0, 0, W, H);
+  const sx = W / (XMAX - XMIN);
+  const sy = H / (YMAX - YMIN);
+
+  // filled innermost zone
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, Math.sqrt(0.5) * sx, Math.sqrt(0.5 / 8) * sy, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(99,102,241,0.05)';
+  ctx.fill();
+
+  LEVELS.forEach((c, i) => {
+    const alpha = 0.1 + (i / LEVELS.length) * 0.4;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, Math.sqrt(c) * sx, Math.sqrt(c / 8) * sy, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(99,102,241,${alpha})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // axis guides
+  ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // minimum star
+  ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(99,102,241,0.5)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff'; ctx.fill();
+}
+
+// ── Draw the gradient descent path
+function drawPath(ctx, path, W, H, diverged) {
+  if (path.length < 2) return;
+  const skip = Math.max(1, Math.floor(path.length / 100));
+  for (let i = 1; i < path.length; i++) {
+    const [x0, y0] = toCanvas(path[i-1].x, path[i-1].y, W, H);
+    const [x1, y1] = toCanvas(path[i].x, path[i].y, W, H);
+    const t = i / path.length;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
+    ctx.strokeStyle = diverged
+      ? `rgba(220,38,38,${0.25 + t * 0.7})`
+      : `rgba(99,102,241,${0.2 + t * 0.7})`;
+    ctx.lineWidth = 1.5; ctx.stroke();
+  }
+  path.forEach((p, i) => {
+    if (i % skip !== 0 && i !== path.length - 1) return;
+    const [px, py] = toCanvas(p.x, p.y, W, H);
+    const t = i / Math.max(path.length - 1, 1);
+    ctx.beginPath(); ctx.arc(px, py, i === path.length - 1 ? 4 : 2, 0, Math.PI * 2);
+    ctx.fillStyle = diverged ? `rgba(220,38,38,${0.4 + t*0.6})` : `rgba(99,102,241,${0.4 + t*0.6})`;
+    ctx.fill();
+  });
+}
+
+// ── Draw current position ball
+function drawBall(ctx, x, y, W, H, diverged) {
+  const [px, py] = toCanvas(x, y, W, H);
+  if (px < -30 || px > W + 30 || py < -30 || py > H + 30) return;
+  ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI * 2);
+  ctx.fillStyle = diverged ? '#DC2626' : '#6366F1'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+}
+
+// ── Main canvas
+const mainCanvas = document.getElementById('main-canvas');
+const mCtx = mainCanvas.getContext('2d');
+let mW = 0, mH = 0, mDpr = 1;
+
+let st = {
+  pos: { ...START }, vel: { x: 0, y: 0 },
+  path: [{ ...START }], step: 0,
+  running: false, diverged: false
+};
+let timerId = null;
+
+function getLR()  { return parseFloat(document.getElementById('lr-slider').value); }
+function getMom() { return parseFloat(document.getElementById('mom-slider').value); }
+
+function resizeMain() {
+  mDpr = window.devicePixelRatio || 1;
+  const rect = mainCanvas.getBoundingClientRect();
+  mW = rect.width; mH = rect.height;
+  mainCanvas.width  = Math.round(mW * mDpr);
+  mainCanvas.height = Math.round(mH * mDpr);
+  mCtx.setTransform(mDpr, 0, 0, mDpr, 0, 0);
+  renderMain();
+}
+
+function renderMain() {
+  drawLandscape(mCtx, mW, mH);
+  drawPath(mCtx, st.path, mW, mH, st.diverged);
+  drawBall(mCtx, st.pos.x, st.pos.y, mW, mH, st.diverged);
+  const L = loss(st.pos.x, st.pos.y);
+  document.getElementById('r-step').textContent = st.step;
+  document.getElementById('r-x').textContent    = st.pos.x.toFixed(3);
+  document.getElementById('r-y').textContent    = st.pos.y.toFixed(3);
+  const el = document.getElementById('r-loss');
+  el.textContent = L > 9999 ? '∞' : L.toFixed(3);
+  el.className = st.diverged ? 'diverged' : '';
+}
+
+function doStep() {
+  if (st.diverged) return;
+  const lr   = getLR();
+  const beta = getMom();
+
+  st.vel.x = beta * st.vel.x + (1 - beta) * gradX(st.pos.x);
+  st.vel.y = beta * st.vel.y + (1 - beta) * gradY(st.pos.y);
+
+  st.pos.x -= lr * st.vel.x;
+  st.pos.y -= lr * st.vel.y;
+
+  st.path.push({ x: st.pos.x, y: st.pos.y });
+
+  if (loss(st.pos.x, st.pos.y) > 5000) st.diverged = true;
+
+  st.step++;
+}
+
+function animLoop() {
+  if (!st.running) return;
+  doStep();
+  renderMain();
+  const L = loss(st.pos.x, st.pos.y);
+  if (st.diverged || L < 0.0001 || st.step >= 600) {
+    st.running = false;
+    document.getElementById('run-btn').textContent = '▶ Run';
+    return;
+  }
+  timerId = setTimeout(animLoop, 45);
+}
+
+document.getElementById('run-btn').onclick = () => {
+  if (st.running) {
+    st.running = false; clearTimeout(timerId);
+    document.getElementById('run-btn').textContent = '▶ Run';
+  } else {
+    st.running = true;
+    document.getElementById('run-btn').textContent = '⏸ Pause';
+    animLoop();
+  }
+};
+document.getElementById('step-btn').onclick = () => { doStep(); renderMain(); };
+document.getElementById('reset-btn').onclick = () => {
+  clearTimeout(timerId);
+  st = { pos: { ...START }, vel: { x: 0, y: 0 }, path: [{ ...START }], step: 0, running: false, diverged: false };
+  document.getElementById('run-btn').textContent = '▶ Run';
+  renderMain();
+};
+
+document.getElementById('lr-slider').oninput  = e => document.getElementById('lr-val').textContent  = parseFloat(e.target.value).toFixed(3);
+document.getElementById('mom-slider').oninput = e => document.getElementById('mom-val').textContent = parseFloat(e.target.value).toFixed(2);
+
+// ── Mini comparison canvases (pure GD, no momentum)
+function runMini(id, resultId, lr, maxSteps) {
+  const canvas = document.getElementById(id);
+  const ctx    = canvas.getContext('2d');
+  const dpr    = window.devicePixelRatio || 1;
+  const W = canvas.getBoundingClientRect().width;
+  const H = canvas.getBoundingClientRect().height;
+  canvas.width  = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  let pos = { ...START };
+  const path = [{ ...pos }];
+  let diverged = false;
+
+  for (let i = 0; i < maxSteps; i++) {
+    const nx = pos.x - lr * gradX(pos.x);
+    const ny = pos.y - lr * gradY(pos.y);
+    pos = { x: nx, y: ny };
+    path.push({ ...pos });
+    if (loss(pos.x, pos.y) > 5000) { diverged = true; break; }
+    if (loss(pos.x, pos.y) < 0.001) break;
+  }
+
+  drawLandscape(ctx, W, H);
+  drawPath(ctx, path, W, H, diverged);
+  drawBall(ctx, pos.x, pos.y, W, H, diverged);
+
+  const el = document.getElementById(resultId);
+  if (diverged) {
+    el.textContent = '✗ diverged'; el.className = 'result bad';
+  } else if (loss(pos.x, pos.y) < 0.01) {
+    el.textContent = `✓ ${path.length - 1} steps`; el.className = 'result good';
+  } else {
+    const L = loss(pos.x, pos.y);
+    el.textContent = `${path.length - 1} steps · loss ${L.toFixed(1)}`; el.className = 'result warn';
+  }
+}
+
+// ── Glossary hover linking
+document.querySelectorAll('.term').forEach(el => {
+  const g = el.dataset.term;
+  el.addEventListener('mouseenter', () => document.querySelector(`dt[data-g="${g}"]`)?.classList.add('hl'));
+  el.addEventListener('mouseleave', () => document.querySelector(`dt[data-g="${g}"]`)?.classList.remove('hl'));
+});
+
+// ── Init
+window.addEventListener('resize', () => {
+  resizeMain();
+  setTimeout(drawMinis, 50);
+});
+
+function drawMinis() {
+  runMini('mini-a', 'res-a', 0.02,  500);
+  runMini('mini-b', 'res-b', 0.08,  500);
+  runMini('mini-c', 'res-c', 0.13,  80);
+}
+
+resizeMain();
+setTimeout(drawMinis, 0);
+</script>
+</body>
+</html>
