@@ -33,7 +33,6 @@
     html { scroll-behavior: smooth; }
     body { background: var(--bg); color: var(--text); font-family: var(--font-sans); padding: 56px 24px 120px; }
 
-    /* ── Layout ── */
     .page {
       max-width: 1060px; margin: 0 auto;
       display: grid;
@@ -42,15 +41,13 @@
     }
     @media (max-width: 900px) { .page { grid-template-columns: 1fr; } }
 
-    /* ── Typography ── */
     .eyebrow {
       font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
       text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px;
     }
     h1 {
       font-family: var(--font-serif); font-size: clamp(32px, 5vw, 52px);
-      font-weight: 700; letter-spacing: -0.02em; line-height: 1.1;
-      margin-bottom: 16px;
+      font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 16px;
     }
     .lead {
       font-size: 19px; color: var(--text-muted); line-height: 1.6;
@@ -60,36 +57,31 @@
       font-family: var(--font-serif); font-size: 22px; font-weight: 500;
       letter-spacing: -0.01em; margin: 40px 0 14px;
     }
-    h3 {
-      font-size: 16px; font-weight: 600; margin: 28px 0 10px;
-    }
-    p { font-size: 17px; line-height: 1.65; margin-bottom: 16px; color: var(--text); }
+    p { font-size: 17px; line-height: 1.7; margin-bottom: 16px; }
+    strong { color: var(--text); }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    /* ── Callout ── */
     .callout {
       border: 1.5px solid var(--border); border-left: 3px solid var(--accent);
       border-radius: var(--radius); background: var(--surface);
-      padding: 16px 20px; margin: 24px 0; font-size: 15px; line-height: 1.6;
+      padding: 16px 20px; margin: 24px 0; font-size: 15px; line-height: 1.7;
     }
     .callout b { color: var(--accent); }
 
-    /* ── Demo panel ── */
+    /* ── Demo ── */
     .demo {
       border: 1.5px solid var(--border); border-radius: var(--radius);
       background: var(--surface); padding: 24px; margin: 24px 0;
     }
     .demo-title {
       font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
     }
+    .demo-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
 
     /* ── Bet toggles ── */
-    .bets-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 12px; margin-bottom: 24px;
-    }
+    .bets-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
     @media (max-width: 600px) { .bets-grid { grid-template-columns: 1fr; } }
 
     .bet-card {
@@ -99,110 +91,74 @@
       cursor: pointer; transition: border-color 180ms, background 180ms;
       user-select: none;
     }
-    .bet-card.active {
-      border-color: var(--accent); background: var(--accent-bg);
-    }
+    .bet-card.active { border-color: var(--accent); background: var(--accent-bg); }
     .bet-icon { font-size: 22px; flex-shrink: 0; }
     .bet-text { flex: 1; }
     .bet-name { font-size: 13px; font-weight: 600; }
     .bet-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-family: var(--font-mono); }
     .bet-card.active .bet-sub { color: var(--accent); }
 
-    /* toggle switch */
     .toggle-wrap { flex-shrink: 0; }
-    .toggle-wrap input { display: none; }
     .toggle-track {
       width: 36px; height: 20px; border-radius: 10px;
-      background: var(--border); position: relative;
-      transition: background 200ms; cursor: pointer;
+      background: var(--border); position: relative; transition: background 200ms; cursor: pointer;
     }
     .bet-card.active .toggle-track { background: var(--accent); }
     .toggle-thumb {
       position: absolute; top: 3px; left: 3px;
       width: 14px; height: 14px; border-radius: 50%;
       background: white; transition: left 200ms;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
     }
     .bet-card.active .toggle-thumb { left: 19px; }
 
-    /* ── Readiness bar ── */
-    .readiness {
-      margin-bottom: 20px;
-      display: flex; align-items: center; gap: 14px;
-    }
+    /* ── Readiness ── */
+    .readiness { margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
     .readiness-label {
       font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
       text-transform: uppercase; color: var(--text-muted); white-space: nowrap;
     }
-    .bar-track {
-      flex: 1; height: 8px; background: var(--demo-bg);
-      border-radius: 4px; overflow: hidden; border: 1px solid var(--border);
-    }
-    .bar-fill {
-      height: 100%; width: 0%; border-radius: 4px;
-      background: var(--accent);
-      transition: width 400ms cubic-bezier(.4,0,.2,1), background 400ms;
-    }
-    .readiness-pct {
-      font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-      color: var(--accent); min-width: 36px; text-align: right;
-      transition: color 400ms;
-    }
+    .bar-track { flex: 1; height: 8px; background: var(--demo-bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+    .bar-fill { height: 100%; width: 0%; border-radius: 4px; background: var(--accent); transition: width 400ms cubic-bezier(.4,0,.2,1), background 400ms; }
+    .readiness-pct { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--accent); min-width: 36px; text-align: right; transition: color 400ms; }
     .readiness-pct.full { color: var(--good); }
 
-    /* ── Agent log ── */
-    .log-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    .log-title {
-      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
-      text-transform: uppercase; color: var(--text-muted);
-    }
-    .log-scenario {
-      font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
-    }
+    /* ── Log ── */
+    .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .log-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+    .log-scenario { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
     .agent-log {
       background: #18181B; border-radius: 8px;
       padding: 16px 18px; min-height: 220px; max-height: 300px;
       overflow-y: auto; font-family: var(--font-mono); font-size: 12px;
       line-height: 1.7; color: #A1A1AA;
     }
-    .agent-log .log-entry { display: flex; gap: 10px; align-items: baseline; }
+    .log-entry { display: flex; gap: 10px; align-items: baseline; }
     .log-ts { color: #52525B; flex-shrink: 0; }
-    .log-ok  { color: #34D399; }
-    .log-err { color: #F87171; }
+    .log-ok   { color: #34D399; }
+    .log-err  { color: #F87171; }
     .log-warn { color: #FBBF24; }
     .log-info { color: #A1A1AA; }
-    .log-dim  { color: #52525B; }
-    .log-entry.fade-in { animation: fadeIn 300ms ease; }
+    .log-entry.fade-in { animation: fadeIn 300ms ease both; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
 
-    /* ── Comparison table ── */
+    /* ── Table ── */
     table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 16px 0; }
     th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
-    th { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
-         letter-spacing: 0.06em; color: var(--text-muted); }
+    th { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
     td.good { color: var(--good); font-weight: 500; }
     td.bad  { color: var(--bad); }
     tr:last-child td { border-bottom: none; }
 
     /* ── Collapsibles ── */
-    details {
-      border: 1.5px solid var(--border); border-radius: var(--radius);
-      background: var(--surface); margin: 14px 0; overflow: hidden;
-    }
+    details { border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--surface); margin: 14px 0; overflow: hidden; }
     summary {
       list-style: none; cursor: pointer; padding: 14px 16px;
       font-family: var(--font-serif); font-size: 17px; color: var(--text);
       display: flex; align-items: center; gap: 10px;
     }
     summary::-webkit-details-marker { display: none; }
-    summary::before {
-      content: "▸"; color: var(--accent);
-      font-family: var(--font-sans); font-size: 12px;
-      transition: transform 120ms; flex-shrink: 0;
-    }
+    summary::before { content: "▸"; color: var(--accent); font-family: var(--font-sans); font-size: 12px; transition: transform 120ms; flex-shrink: 0; }
     details[open] summary::before { transform: rotate(90deg); }
     .bet-badge {
       margin-left: auto; font-family: var(--font-mono); font-size: 10px;
@@ -210,71 +166,72 @@
       padding: 3px 10px; border-radius: 4px;
       background: var(--accent-bg); color: var(--accent); border: 1px solid rgba(99,102,241,.2);
     }
-    details .body { padding: 4px 16px 18px; }
-    details .body p { font-size: 15px; margin-bottom: 12px; }
-    details .body ul { margin: 8px 0 12px 20px; }
-    details .body li { font-size: 15px; line-height: 1.6; margin-bottom: 6px; }
+    details .body { padding: 4px 18px 20px; }
+    details .body p { font-size: 15px; margin-bottom: 14px; }
+    details .body ul { margin: 8px 0 14px 20px; }
+    details .body li { font-size: 15px; line-height: 1.65; margin-bottom: 8px; }
+    .analogy-box {
+      background: var(--accent-bg); border: 1px solid rgba(99,102,241,.2);
+      border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;
+      font-size: 14px; font-style: italic; color: var(--text-muted); line-height: 1.6;
+    }
+    .analogy-box strong { color: var(--accent); font-style: normal; }
 
-    /* ── Governance debt bar chart ── */
-    .debt-chart { margin: 20px 0; }
+    /* ── Debt chart ── */
+    .debt-chart { margin: 16px 0; }
     .debt-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .debt-label { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); width: 100px; flex-shrink: 0; }
+    .debt-label { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); width: 140px; flex-shrink: 0; }
     .debt-bar-wrap { flex: 1; height: 10px; background: var(--demo-bg); border-radius: 5px; overflow: hidden; }
     .debt-bar { height: 100%; border-radius: 5px; }
     .debt-bar.red   { background: var(--bad); }
     .debt-bar.amber { background: var(--warn); }
     .debt-bar.green { background: var(--good); }
-    .debt-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); width: 40px; text-align: right; }
+    .debt-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); width: 32px; text-align: right; }
 
     /* ── Glossary ── */
     aside {
       position: sticky; top: 32px; align-self: start;
       border: 1.5px solid var(--border); border-radius: var(--radius);
-      background: var(--surface); padding: 18px 18px 8px;
+      background: var(--surface); padding: 18px 18px 10px;
     }
-    aside .label {
-      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px;
-    }
-    aside dl dt {
-      font-family: var(--font-serif); font-size: 15px; color: var(--text); margin-top: 14px;
-      cursor: default;
-    }
-    aside dl dd { font-size: 13px; color: var(--text-muted); margin: 4px 0 2px; line-height: 1.5; }
-    aside hr { border: none; border-top: 1px solid var(--border); margin: 16px 0 4px; }
-    aside .src {
-      font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-top: 8px;
-    }
+    aside .label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+    aside dl dt { font-family: var(--font-serif); font-size: 15px; color: var(--text); margin-top: 14px; }
+    aside dl dd { font-size: 13px; color: var(--text-muted); margin: 4px 0 2px; line-height: 1.55; }
+    aside hr { border: none; border-top: 1px solid var(--border); margin: 16px 0 6px; }
+    aside .src { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
     aside .src a { font-size: 12px; }
   </style>
 </head>
 <body>
 <div class="page">
 
-<!-- ── Main ── -->
 <main>
-  <div class="eyebrow">AI Engineering · Concept Explainer</div>
+  <div class="eyebrow">AI Engineering · Beginner Explainer</div>
   <h1>The Agent Stack Bet</h1>
-  <p class="lead">Production AI agents keep breaking — not because the prompts are wrong, but because the infrastructure underneath was never built for them. Here's the four-layer fix.</p>
+  <p class="lead">AI assistants keep crashing in the real world — not because they're dumb, but because nobody built the right foundation underneath them. Here's what's missing and how to fix it.</p>
 
   <div class="callout">
-    <b>TL;DR</b> — Most production agents today run on duct-taped infrastructure: shared credentials, siloed context, session-bound execution, and custom plumbing that teams rebuild from scratch each time. Addy Osmani argues teams have ~12 months to make four architectural bets — on identity, context, persistence, and platform — or get stuck at "sophisticated demo" forever.
+    <b>Plain English summary</b> — Imagine hiring a new employee, but you never give them their own login, only let them see one filing cabinet at a time, tell them their memory resets every 4 hours, and make them rebuild their own desk every morning. That's what most AI agents deal with today. This article argues there are four specific things to fix — and teams that don't fix them in the next year will get stuck.
   </div>
 
-  <h2>Why agents keep failing in production</h2>
-  <p>When a production agent misbehaves, the instinct is to improve the prompt. But the real culprits are usually invisible: shared service accounts with no audit trail, context fragmented across a dozen systems the agent can't simultaneously see, and state that vanishes the moment a session token expires.</p>
-  <p>Addy Osmani calls this <strong>governance debt</strong> — security and reliability risk that accumulates silently, not through bad decisions but through the absence of the right infrastructure. It's a stack failure, not a people failure.</p>
+  <h2>What even is an "agent"?</h2>
+  <p>An <strong>AI agent</strong> is a program that doesn't just answer questions — it takes actions. It can browse the web, read your emails, update a spreadsheet, file a support ticket, or call an API. You give it a goal and it figures out the steps.</p>
+  <p>Companies are now trying to use agents for serious business tasks: process hundreds of invoices, flag contracts that look risky, monitor customer churn. These tasks take hours, touch multiple systems, and can't afford to make silent mistakes.</p>
+  <p>The problem? Most of the technology underneath agents was built for chatbots — quick questions and answers. When you ask an agent to do a 3-day task, the foundations start cracking.</p>
+
+  <h2>Try it: flip the four fixes</h2>
+  <p>Below is a simulated agent log for a real task: processing Q2 vendor invoices and spotting anything unusual. Toggle each "fix" on and off to see how the agent's behaviour changes.</p>
 
   <div class="demo">
-    <div class="demo-title">Interactive Demo · Toggle the Four Bets</div>
-    <p style="font-size:14px;color:var(--text-muted);margin-bottom:18px;">A procurement agent is processing Q2 vendor invoices. Toggle each architectural bet to see what happens to the run log.</p>
+    <div class="demo-title">Interactive demo</div>
+    <div class="demo-desc">Toggle each fix on or off. Watch the agent log update — red lines are failures, green are successes. Try turning them all on to see a fully working run.</div>
 
     <div class="bets-grid">
       <div class="bet-card" id="card-identity" onclick="toggleBet('identity')">
         <div class="bet-icon">🪪</div>
         <div class="bet-text">
-          <div class="bet-name">Agent Identity</div>
-          <div class="bet-sub" id="sub-identity">shared credentials</div>
+          <div class="bet-name">Its own identity</div>
+          <div class="bet-sub" id="sub-identity">using shared login</div>
         </div>
         <div class="toggle-wrap">
           <div class="toggle-track"><div class="toggle-thumb"></div></div>
@@ -283,8 +240,8 @@
       <div class="bet-card" id="card-context" onclick="toggleBet('context')">
         <div class="bet-icon">🗺️</div>
         <div class="bet-text">
-          <div class="bet-name">Universal Context</div>
-          <div class="bet-sub" id="sub-context">siloed data</div>
+          <div class="bet-name">See all the data</div>
+          <div class="bet-sub" id="sub-context">one system at a time</div>
         </div>
         <div class="toggle-wrap">
           <div class="toggle-track"><div class="toggle-thumb"></div></div>
@@ -293,8 +250,8 @@
       <div class="bet-card" id="card-persist" onclick="toggleBet('persist')">
         <div class="bet-icon">💾</div>
         <div class="bet-text">
-          <div class="bet-name">Persistence</div>
-          <div class="bet-sub" id="sub-persist">session-bound</div>
+          <div class="bet-name">Remember between sessions</div>
+          <div class="bet-sub" id="sub-persist">memory resets on disconnect</div>
         </div>
         <div class="toggle-wrap">
           <div class="toggle-track"><div class="toggle-thumb"></div></div>
@@ -303,8 +260,8 @@
       <div class="bet-card" id="card-platform" onclick="toggleBet('platform')">
         <div class="bet-icon">🏗️</div>
         <div class="bet-text">
-          <div class="bet-name">Platform</div>
-          <div class="bet-sub" id="sub-platform">custom plumbing</div>
+          <div class="bet-name">Built-in plumbing</div>
+          <div class="bet-sub" id="sub-platform">custom-built every time</div>
         </div>
         <div class="toggle-wrap">
           <div class="toggle-track"><div class="toggle-thumb"></div></div>
@@ -313,194 +270,198 @@
     </div>
 
     <div class="readiness">
-      <span class="readiness-label">Production Readiness</span>
+      <span class="readiness-label">Production ready</span>
       <div class="bar-track"><div class="bar-fill" id="readiness-fill"></div></div>
       <span class="readiness-pct" id="readiness-pct">0%</span>
     </div>
 
     <div class="log-header">
-      <span class="log-title">Agent Run Log</span>
-      <span class="log-scenario">Task: process Q2 vendor invoices</span>
+      <span class="log-title">Agent run log</span>
+      <span class="log-scenario">Task: check Q2 invoices for anomalies</span>
     </div>
     <div class="agent-log" id="agent-log"></div>
   </div>
 
-  <h2>The four bets</h2>
-  <p>Each bet is a shift from something that works in demos to something that works in production. Together they form a coherent architecture — you can't fully solve persistence without identity, and universal context is hollow without platform-level delivery.</p>
+  <h2>The four fixes, explained simply</h2>
+  <p>Engineer and author Addy Osmani calls these the "four bets." Each one is a shift from something that works in a 10-minute demo to something that works when real money and real data are on the line.</p>
 
   <details open>
-    <summary>Bet 1 · Agent Identity <span class="bet-badge">Bet #1</span></summary>
+    <summary>Fix 1 · Give it its own identity <span class="bet-badge">Bet #1</span></summary>
     <div class="body">
-      <p><strong>Today:</strong> Agents are "ghosts" — they borrow service accounts or inherit human OAuth tokens. Every action looks like it came from <code>infra-prod-001</code>, alongside four other agents and three humans. When something goes wrong, attribution is impossible.</p>
-      <p><strong>The bet:</strong> Move identity from the application layer to the platform layer. Agents need unforgeable machine certificates, recognized at the network level, with permissions enforced at the source. A connection to a restricted system either opens or it doesn't — no middleware gate that can be bypassed with a cleverly worded prompt.</p>
+      <div class="analogy-box"><strong>Analogy:</strong> Imagine five employees all sharing one username and password. When something goes wrong — a file is deleted, a wire transfer is approved — you have no idea who did it. You can't fire the person or revoke their access, because there's no "person" to point to.</div>
+      <p>Today, most agents borrow a login from a human employee or share a single "service account" with other systems. The company's security tools can't tell the agent apart from a person, or from other agents running alongside it.</p>
+      <p>The fix is to give each agent its own <strong>unforgeable digital ID</strong> — like a badge that only it can carry. When the agent does something, that action is stamped with its specific identity. You can see exactly what it accessed, and if you need to stop it, you just revoke its badge.</p>
       <ul>
-        <li>Actions become attributable: every database write, every API call, every credential use logs the specific agent</li>
-        <li>Permissions become revocable: pull the certificate, the agent stops — no hunting down shared passwords</li>
-        <li>Security becomes auditable: compliance teams can answer "what did our agents access last Tuesday?"</li>
+        <li>Every action the agent takes gets a clear "who did this" label in the audit log</li>
+        <li>You can cut an agent's access instantly, without affecting any humans or other agents</li>
+        <li>Security teams can actually answer "what did our agents do last week?"</li>
       </ul>
     </div>
   </details>
 
   <details>
-    <summary>Bet 2 · Universal Context <span class="bet-badge">Bet #2</span></summary>
+    <summary>Fix 2 · Let it see all the data at once <span class="bet-badge">Bet #2</span></summary>
     <div class="body">
-      <p><strong>Today:</strong> Teams burn engineering hours on "undifferentiated plumbing" — custom serialization, bespoke session stores, hand-rolled memory layers. The result: a browser agent sees one tab, a desktop wrapper sees dragged files, but neither can simultaneously reason over CRM records, ERP approvals, data warehouse trends, and ticketing history.</p>
-      <p><strong>The bet:</strong> Context integration at the platform level, not the application level. Agents should have a unified view across all business systems — not because each system was painstakingly connected by hand, but because the platform provides a shared semantic layer.</p>
+      <div class="analogy-box"><strong>Analogy:</strong> Imagine a detective who can only look at one filing cabinet at a time — they can read police reports OR financial records OR witness statements, but never all three together. Their conclusions will always be incomplete.</div>
+      <p>Most agents today are like that detective. They can connect to your invoice database, <em>or</em> your vendor contract system, <em>or</em> your payment history — but not all three simultaneously. That means they can't make connections between systems, which is exactly where the interesting insights live.</p>
+      <p>The fix is a <strong>shared layer that connects all your business systems</strong> so the agent can reason across all of them at once. It can spot that the invoice amount doesn't match the contract price because it can see both at the same time.</p>
       <ul>
-        <li>Without this: agents are expensive autocomplete for one system at a time</li>
-        <li>With this: agents can reason about cross-system causality ("contract terms in ERP explain the anomaly in AP invoices")</li>
-        <li>The ceiling for siloed agents is "slightly better spreadsheet autocomplete" — Osmani's bluntest line</li>
+        <li>Without this, agents are just slightly smarter search boxes for one system at a time</li>
+        <li>With this, an agent can spot a vendor overcharging because it sees the contract and the invoice together</li>
+        <li>This is the hardest fix but unlocks the most value — cross-system reasoning is where AI earns its keep</li>
       </ul>
     </div>
   </details>
 
   <details>
-    <summary>Bet 3 · Persistence Across Disconnects <span class="bet-badge">Bet #3</span></summary>
+    <summary>Fix 3 · Give it a real memory <span class="bet-badge">Bet #3</span></summary>
     <div class="body">
-      <p><strong>Today:</strong> Most agents hit hard ceilings — time-based, token-based, or governance-based. When a session ends, work disappears. Humans reassemble state from transcripts. For an agent running a procurement workflow that spans multiple vendor approvals across three days, this is fatal.</p>
-      <p><strong>The bet:</strong> State and checkpointing that survives restarts, disconnects, redeploys, and model version changes. Long-horizon memory with automatic summarization so context doesn't exhaust token limits over multi-week tasks. And critically: first-class human-in-the-loop primitives — the ability to pause and ask permission rather than silently deciding authority.</p>
+      <div class="analogy-box"><strong>Analogy:</strong> Imagine a contractor who, every time they leave for lunch, completely forgets everything they were working on. You'd have to brief them from scratch every afternoon. No real project would ever get finished.</div>
+      <p>Today, most agents have a "session" — a window of time during which they remember what they're doing. When the session ends (because of a timeout, a crash, or just a long lunch break), everything is gone. For a task that takes 3 days, this is a dealbreaker.</p>
+      <p>The fix is <strong>persistent memory with checkpoints</strong> — like a save file in a video game. The agent saves its progress as it goes. If it gets interrupted, it picks up exactly where it left off, even days later, even if the underlying software has been updated.</p>
       <ul>
-        <li>Enterprise workflows are inherently multi-day: procurement, compliance audits, incident investigations</li>
-        <li>"Persistence with guardrails" is the standard — anything less is a prolonged demo</li>
-        <li>Human-in-the-loop is a feature, not a workaround: agents should know when to pause, not just when they're stuck</li>
+        <li>Real business tasks take days: approving a purchase order, running a compliance check, tracking a delivery</li>
+        <li>The agent also needs to know when to pause and ask a human for permission, rather than guessing</li>
+        <li>"Persistence with guardrails" — it remembers everything, but it doesn't act alone on things it shouldn't</li>
       </ul>
     </div>
   </details>
 
   <details>
-    <summary>Bet 4 · Platforms, Not Custom Infrastructure <span class="bet-badge">Bet #4</span></summary>
+    <summary>Fix 4 · Stop rebuilding the same plumbing <span class="bet-badge">Bet #4</span></summary>
     <div class="body">
-      <p><strong>Today:</strong> Brilliant engineers drain bandwidth on custom memory systems, bespoke eval harnesses, homegrown observability, handwritten retry logic, and tracing systems that "almost work." Every team rebuilds the same stack from scratch.</p>
-      <p><strong>The bet:</strong> The unique value is domain reasoning — what your agents know about your business, your data, your customers. Everything underneath should be the platform you build <em>on</em>, not plumbing you build <em>with</em>.</p>
+      <div class="analogy-box"><strong>Analogy:</strong> Every time you build a new house, you shouldn't be inventing electricity from scratch. Wiring, pipes, and broadband are solved — you plug into them. But most AI teams are currently laying their own cables every single time.</div>
+      <p>Right now, smart engineering teams spend months building the same basic things over and over: how to retry a failed request, how to log what the agent did, how to track down a bug, how to test that the agent is working correctly. Every team reinvents these wheels independently.</p>
+      <p>The fix is to <strong>use a platform</strong> that has already solved all of that — one that handles the boring-but-hard reliability problems so your team can focus on the parts only your business can build: the unique logic, the domain knowledge, the competitive advantage.</p>
       <ul>
-        <li>Open primitives matter: orchestration frameworks that prevent lock-in</li>
-        <li>The same building blocks on your laptop should run in production without a rewrite</li>
-        <li>Time spent rebuilding common infrastructure is time not spent on differentiating logic</li>
+        <li>Engineering time spent on retry logic is engineering time not spent on your actual product</li>
+        <li>A good platform lets you develop on your laptop with the same tools you'll use in production — no surprise behaviour when you deploy</li>
+        <li>Open platforms matter so you're not locked into one vendor forever</li>
       </ul>
     </div>
   </details>
 
-  <h2>The governance debt problem, visualised</h2>
-  <p>Governance debt isn't a single bug — it's the compounding cost of running agents without proper infrastructure. Here's what accumulates silently over a typical 6-month production deployment:</p>
+  <h2>Why it's urgent</h2>
+  <p>You might wonder: can't teams just fix these things slowly over time? The article's argument is no — and it's an economic argument, not a technical one.</p>
+  <p>Every month you spend building your own identity system, your own memory layer, your own logging tools, is a month you're <em>not</em> spending on the thing only your company can build. Your competitors who pick a good foundation early will spend that time building better products instead.</p>
+  <p>Osmani puts the window at about 12 months. After that, teams that went the custom-build route will be stuck maintaining their custom infrastructure rather than shipping new capabilities on top of it.</p>
 
-  <div class="demo">
-    <div class="debt-chart">
-      <div class="debt-row">
-        <span class="debt-label">Unattributed actions</span>
-        <div class="debt-bar-wrap"><div class="debt-bar red" style="width:82%"></div></div>
-        <span class="debt-val">82%</span>
-      </div>
-      <div class="debt-row">
-        <span class="debt-label">Orphaned credentials</span>
-        <div class="debt-bar-wrap"><div class="debt-bar amber" style="width:67%"></div></div>
-        <span class="debt-val">67%</span>
-      </div>
-      <div class="debt-row">
-        <span class="debt-label">Lost work (session end)</span>
-        <div class="debt-bar-wrap"><div class="debt-bar red" style="width:74%"></div></div>
-        <span class="debt-val">74%</span>
-      </div>
-      <div class="debt-row">
-        <span class="debt-label">Custom plumbing LOC</span>
-        <div class="debt-bar-wrap"><div class="debt-bar amber" style="width:58%"></div></div>
-        <span class="debt-val">58%</span>
-      </div>
-      <div class="debt-row">
-        <span class="debt-label">Context coverage</span>
-        <div class="debt-bar-wrap"><div class="debt-bar green" style="width:22%"></div></div>
-        <span class="debt-val">22%</span>
-      </div>
-    </div>
-    <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">Representative figures from teams that adopted platform-level agent infrastructure after custom builds. Context coverage climbs fastest once universal context is solved — it enables everything else.</p>
-  </div>
-
-  <h2>Architectural comparison</h2>
+  <h2>How do agents look now vs. how they should?</h2>
   <table>
     <thead>
-      <tr>
-        <th>Dimension</th>
-        <th>Demo-grade agent</th>
-        <th>Production-grade agent</th>
-      </tr>
+      <tr><th>What the agent needs</th><th>What most teams have today</th><th>What it should look like</th></tr>
     </thead>
     <tbody>
       <tr>
-        <td>Identity</td>
-        <td class="bad">Shared service account</td>
-        <td class="good">Per-agent certificate, enforceable at source</td>
+        <td>Its own identity</td>
+        <td class="bad">Shared team login or borrowed password</td>
+        <td class="good">Its own verified digital ID, unique to that agent</td>
       </tr>
       <tr>
-        <td>Context</td>
-        <td class="bad">One system at a time</td>
-        <td class="good">Cross-system semantic layer</td>
+        <td>Access to data</td>
+        <td class="bad">One database at a time, manually connected</td>
+        <td class="good">All business systems visible simultaneously</td>
       </tr>
       <tr>
-        <td>Persistence</td>
-        <td class="bad">Lost on session end</td>
-        <td class="good">Checkpoint + resume across restarts</td>
+        <td>Memory</td>
+        <td class="bad">Resets when the session ends — work is lost</td>
+        <td class="good">Saves progress like a video game — resumes anywhere</td>
       </tr>
       <tr>
-        <td>Infrastructure</td>
-        <td class="bad">Custom per team</td>
-        <td class="good">Shared platform primitives</td>
+        <td>Reliability tools</td>
+        <td class="bad">Custom-built by each team from scratch</td>
+        <td class="good">Provided by the platform — plug in and go</td>
       </tr>
       <tr>
         <td>Audit trail</td>
-        <td class="bad">None or partial</td>
-        <td class="good">Full attribution per action</td>
+        <td class="bad">No record of what the agent did or why</td>
+        <td class="good">Every action logged with who, what, and when</td>
       </tr>
       <tr>
         <td>Human oversight</td>
-        <td class="bad">All-or-nothing control</td>
-        <td class="good">First-class pause / escalate primitives</td>
+        <td class="bad">Either fully automatic or requires constant babysitting</td>
+        <td class="good">Agent pauses and asks when it's unsure — then continues</td>
       </tr>
       <tr>
-        <td>Time horizon</td>
-        <td class="bad">Minutes to hours</td>
-        <td class="good">Days to weeks</td>
+        <td>How long it can work</td>
+        <td class="bad">Minutes to a few hours before something breaks</td>
+        <td class="good">Days or weeks, across multiple tasks</td>
       </tr>
     </tbody>
   </table>
 
-  <h2>The 5-year horizon</h2>
-  <p>Osmani's central argument is an economic one: every engineering month spent rebuilding identity, context, persistence, or orchestration from scratch is a month not spent on the logic only your organisation can write — the domain reasoning, the business rules, the competitive moat.</p>
-  <p>Teams that pull ahead won't necessarily have better models or bigger compute budgets. They'll have chosen a foundation that treats agents as a managed workforce rather than a collection of scripts, and invested their engineering hours in problems only they can solve.</p>
-  <p>The window is roughly 12 months. After that, teams that rebuilt the stack themselves will be maintaining it instead of shipping on top of it.</p>
+  <h2>The hidden cost: accumulated risk</h2>
+  <p>There's one more idea in the article worth understanding: <strong>governance debt</strong>. This is the invisible risk that builds up when you run agents without proper infrastructure.</p>
+  <p>It's not like a bug that crashes your app. It's quieter than that. Over months, you accumulate: actions you can't trace, credentials you can't revoke, work that disappears without warning, and systems so custom-built that one person leaving means nobody understands them anymore.</p>
+
+  <div class="demo">
+    <div class="demo-title">What governance debt looks like after 6 months</div>
+    <div class="demo-desc">Each bar shows a problem that builds up silently when agent infrastructure is skipped.</div>
+    <div class="debt-chart">
+      <div class="debt-row">
+        <span class="debt-label">Actions with no trace</span>
+        <div class="debt-bar-wrap"><div class="debt-bar red" style="width:82%"></div></div>
+        <span class="debt-val">82%</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">Orphaned logins</span>
+        <div class="debt-bar-wrap"><div class="debt-bar amber" style="width:67%"></div></div>
+        <span class="debt-val">67%</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">Work lost to timeouts</span>
+        <div class="debt-bar-wrap"><div class="debt-bar red" style="width:74%"></div></div>
+        <span class="debt-val">74%</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">Custom code nobody owns</span>
+        <div class="debt-bar-wrap"><div class="debt-bar amber" style="width:58%"></div></div>
+        <span class="debt-val">58%</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">Data the agent can actually see</span>
+        <div class="debt-bar-wrap"><div class="debt-bar green" style="width:22%"></div></div>
+        <span class="debt-val">22%</span>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.55;">The bottom row is the only one you want to be high. The rest are problems you can't easily see until something goes wrong.</p>
+  </div>
+
 </main>
 
-<!-- ── Glossary sidebar ── -->
+<!-- ── Sidebar ── -->
 <aside>
-  <div class="label">Key Terms</div>
+  <div class="label">Plain English glossary</div>
   <dl>
+    <dt>AI Agent</dt>
+    <dd>A program that takes actions (clicking, writing, calling APIs) on your behalf — not just answering questions.</dd>
+
     <dt>Governance Debt</dt>
-    <dd>The silent accumulation of security, audit, and reliability risk from running agents on infrastructure not designed for them.</dd>
+    <dd>The invisible risk that quietly builds up when you skip proper infrastructure — like leaving your front door unlocked a little every day.</dd>
 
-    <dt>Stack Ceiling</dt>
-    <dd>The hard upper limit on what an agent can do when its infrastructure is underpowered — no amount of prompting gets past it.</dd>
+    <dt>Session</dt>
+    <dd>The window of time during which an agent is "awake." When a session ends, the agent forgets everything unless it has persistent memory.</dd>
 
-    <dt>Agent Identity</dt>
-    <dd>A machine-verifiable, unforgeable credential unique to a specific agent — not inherited from a human or shared service account.</dd>
+    <dt>Service Account</dt>
+    <dd>A shared login used by programs instead of humans. When multiple agents share one, you lose track of who did what.</dd>
+
+    <dt>Audit Trail</dt>
+    <dd>A log of every action taken — who did it, when, and what changed. Essential for knowing what went wrong (or right).</dd>
+
+    <dt>Checkpoint</dt>
+    <dd>A saved snapshot of where the agent is in a task — like a save file. Lets it resume after a crash or restart.</dd>
+
+    <dt>Orchestration</dt>
+    <dd>The system that coordinates an agent's steps, retries failures, and tracks progress. The "project manager" for the agent.</dd>
 
     <dt>Universal Context</dt>
-    <dd>Platform-level access to all relevant business systems simultaneously — CRM, ERP, data warehouse, ticketing — without custom plumbing per integration.</dd>
-
-    <dt>Persistence Primitives</dt>
-    <dd>Platform guarantees that agent state survives disconnects, restarts, and credential rotations — enabling multi-day or multi-week workflows.</dd>
-
-    <dt>Human-in-the-Loop</dt>
-    <dd>First-class agent behaviour to pause, request permission, and await approval — rather than silently deciding authority or failing.</dd>
-
-    <dt>Undifferentiated Plumbing</dt>
-    <dd>Infrastructure every team rebuilds from scratch (retry logic, memory, observability) that provides no competitive advantage.</dd>
-
-    <dt>Session-Bound Execution</dt>
-    <dd>The failure mode where agent work is lost when a session token expires, a connection drops, or a model version changes.</dd>
+    <dd>When an agent can see all your business systems at once — invoices, contracts, emails — instead of one at a time.</dd>
   </dl>
   <hr>
   <p class="src">Based on <a href="https://addyo.substack.com/p/the-agent-stack-bet" target="_blank">The Agent Stack Bet</a> by Addy Osmani.</p>
 </aside>
 
-</div><!-- .page -->
+</div>
 
 <script>
   const state = { identity: false, context: false, persist: false, platform: false };
@@ -508,81 +469,74 @@
   const logLines = {
     identity: {
       off: [
-        ['warn', '09:14:02', 'AUTH    ', 'agent using shared svc account infra-prod-001 (4 other agents on same credentials)'],
-        ['err',  '09:14:03', 'AUDIT   ', 'action attributed to infra-prod-001 — cannot distinguish agent from human'],
+        ['warn', '09:14:02', 'LOGIN   ', 'using shared account "infra-prod-001" — 4 other agents on same login'],
+        ['err',  '09:14:03', 'AUDIT   ', 'cannot tell if action was by agent or human — no identity on record'],
       ],
       on: [
-        ['ok',   '09:14:02', 'AUTH    ', 'agent-procurement-a7f3 authenticated via rotatable certificate (exp 24h)'],
-        ['ok',   '09:14:03', 'AUDIT   ', 'all actions attributed to agent-procurement-a7f3 — full audit trail active'],
+        ['ok',   '09:14:02', 'LOGIN   ', 'signed in as "agent-invoices-a7f3" — its own unique, rotatable ID'],
+        ['ok',   '09:14:03', 'AUDIT   ', 'every action stamped with agent-invoices-a7f3 — full record kept'],
       ]
     },
     context: {
       off: [
-        ['warn', '09:14:05', 'CONTEXT ', 'accessing invoice DB only — no ERP vendor contracts visible'],
-        ['err',  '09:14:06', 'CONTEXT ', 'cannot cross-reference payment history (CRM silo) — anomaly detection incomplete'],
+        ['warn', '09:14:05', 'DATA    ', 'connected to invoice database only — cannot see vendor contracts'],
+        ['err',  '09:14:06', 'DATA    ', 'spotted unusual amount but cannot check contract — anomaly missed'],
       ],
       on: [
-        ['ok',   '09:14:05', 'CONTEXT ', 'cross-system view active: invoices + contracts + payment history + approvals'],
-        ['ok',   '09:14:06', 'CONTEXT ', 'anomaly flagged: vendor #4412 — contract terms (ERP) vs billed amount (AP) mismatch'],
+        ['ok',   '09:14:05', 'DATA    ', 'connected to invoices + contracts + payment history simultaneously'],
+        ['ok',   '09:14:06', 'DATA    ', 'anomaly found: vendor #4412 billed $12,400 — contract says $9,200'],
       ]
     },
     persist: {
       off: [
-        ['warn', '09:14:10', 'SESSION ', 'session token expires in 4h — workflow ETA 3 days'],
-        ['err',  '09:14:11', 'SESSION ', 'checkpoint unsupported — progress will be lost on disconnect or model swap'],
+        ['warn', '09:14:10', 'MEMORY  ', 'session expires in 4 hours — this task takes 3 days'],
+        ['err',  '09:14:11', 'MEMORY  ', 'no checkpoint system — all progress lost if connection drops'],
       ],
       on: [
-        ['ok',   '09:14:10', 'PERSIST ', 'checkpoint saved at step 14/200 — survives credential rotation and redeploys'],
-        ['ok',   '09:14:11', 'PERSIST ', 'long-horizon memory active — workflow will resume across sessions autonomously'],
+        ['ok',   '09:14:10', 'MEMORY  ', 'progress saved at step 14 of 200 — will resume if interrupted'],
+        ['ok',   '09:14:11', 'MEMORY  ', 'human approval requested for anomaly flagged — agent waiting'],
       ]
     },
     platform: {
       off: [
-        ['warn', '09:14:15', 'INFRA   ', 'custom retry logic v3 loaded — known flaky on network partitions'],
-        ['err',  '09:14:16', 'INFRA   ', 'trace system not initialised — no observability for this run'],
+        ['warn', '09:14:15', 'INFRA   ', 'using custom retry code from 2024 — known issues with timeouts'],
+        ['err',  '09:14:16', 'INFRA   ', 'no logging system active — cannot diagnose failures after the fact'],
       ],
       on: [
-        ['ok',   '09:14:15', 'INFRA   ', 'managed orchestration active — retries, backoff, and circuit-break handled by platform'],
-        ['ok',   '09:14:16', 'INFRA   ', 'trace-id a7f3b2 initialised — full observability across all tool calls'],
+        ['ok',   '09:14:15', 'INFRA   ', 'platform handles retries, failures, and backoff automatically'],
+        ['ok',   '09:14:16', 'INFRA   ', 'full trace active (id: a7f3b2) — every step recorded for debugging'],
       ]
     }
   };
 
   const staticLines = [
-    ['info', '09:14:00', 'AGENT   ', 'task received: process Q2 vendor invoices, flag anomalies'],
-    ['info', '09:14:01', 'AGENT   ', 'connecting to data sources...'],
+    ['info', '09:14:00', 'TASK    ', 'starting: review Q2 vendor invoices, flag anything unusual'],
+    ['info', '09:14:01', 'TASK    ', 'connecting to data sources...'],
   ];
 
   const closingLines = {
-    bad:  [['err',  '09:14:20', 'AGENT   ', 'run terminated — governance debt too high to continue safely']],
-    good: [['ok',   '09:14:20', 'AGENT   ', 'run complete — 3 anomalies flagged, audit trail written, checkpoint archived']]
+    bad:  [['err',  '09:14:20', 'TASK    ', 'run stopped — too many unresolved errors to continue safely']],
+    good: [['ok',   '09:14:20', 'TASK    ', 'done — 3 anomalies flagged, all actions logged, progress saved']]
   };
 
   function render() {
-    const log = document.getElementById('agent-log');
     const score = Object.values(state).filter(Boolean).length;
     const pct = score * 25;
 
-    // readiness bar
-    const fill = document.getElementById('readiness-fill');
+    document.getElementById('readiness-fill').style.width = pct + '%';
+    document.getElementById('readiness-fill').style.background = pct === 100 ? 'var(--good)' : 'var(--accent)';
     const pctEl = document.getElementById('readiness-pct');
-    fill.style.width = pct + '%';
-    fill.style.background = pct === 100 ? 'var(--good)' : 'var(--accent)';
     pctEl.textContent = pct + '%';
     pctEl.classList.toggle('full', pct === 100);
 
-    // subtitles
-    const subs = {
-      identity: state.identity ? 'per-agent certificate' : 'shared credentials',
-      context:  state.context  ? 'universal platform view' : 'siloed data',
-      persist:  state.persist  ? 'durable checkpoints' : 'session-bound',
-      platform: state.platform ? 'managed orchestration' : 'custom plumbing',
+    const labels = {
+      identity: [state.identity ? 'its own ID active' : 'using shared login'],
+      context:  [state.context  ? 'all systems visible' : 'one system at a time'],
+      persist:  [state.persist  ? 'memory saves progress' : 'memory resets on disconnect'],
+      platform: [state.platform ? 'platform handles plumbing' : 'custom-built every time'],
     };
-    Object.entries(subs).forEach(([k, v]) => {
-      document.getElementById('sub-' + k).textContent = v;
-    });
+    Object.entries(labels).forEach(([k, [v]]) => { document.getElementById('sub-' + k).textContent = v; });
 
-    // build log
     const lines = [
       ...staticLines,
       ...logLines.identity[state.identity ? 'on' : 'off'],
@@ -592,21 +546,18 @@
       ...(score === 4 ? closingLines.good : closingLines.bad),
     ];
 
-    log.innerHTML = lines.map(([cls, ts, tag, msg], i) =>
-      `<div class="log-entry fade-in" style="animation-delay:${i*30}ms">
+    document.getElementById('agent-log').innerHTML = lines.map(([cls, ts, tag, msg], i) =>
+      `<div class="log-entry fade-in" style="animation-delay:${i * 30}ms">
         <span class="log-ts">${ts}</span>
         <span class="log-${cls}">${cls === 'ok' ? '✓' : cls === 'err' ? '✗' : cls === 'warn' ? '⚠' : '·'} ${tag}</span>
-        <span class="log-${cls === 'info' ? 'info' : cls === 'dim' ? 'dim' : cls}">${msg}</span>
+        <span class="log-${cls === 'info' ? 'info' : cls}">${msg}</span>
       </div>`
     ).join('');
-
-    log.scrollTop = log.scrollHeight;
   }
 
   function toggleBet(key) {
     state[key] = !state[key];
-    const card = document.getElementById('card-' + key);
-    card.classList.toggle('active', state[key]);
+    document.getElementById('card-' + key).classList.toggle('active', state[key]);
     render();
   }
 
