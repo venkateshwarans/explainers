@@ -1,0 +1,21 @@
+agent-harness-flue-explainer.html
+  s_1d332875577bde::t_5462a24fd3043e 1-929
+index.html
+  s_1d332875577bde::t_abbecb1fc38451 226-231
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "5299e4930498b7a4134fa6e3ba40670180443c37",
+  "prompts": {},
+  "sessions": {
+    "s_1d332875577bde": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7d792d6-050c-42f9-8f71-140ea3a9dd2d",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Venkateshwaran Selvaraj <venkateshwaran.selvaraj+github@gmail.com>"
+    }
+  }
+}
