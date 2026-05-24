@@ -246,6 +246,10 @@
 <p>Reference material gets read once and ignored. A skill is a <em>sequence of steps the agent follows</em>, with checkpoints that produce concrete evidence, ending in a defined exit criterion. The agent doesn't summarize the skill — it follows it.</p>
 
 <div class="callout">
+  <strong>Connection to Part 1:</strong> Remember the harness layer from <a href="agent-harness-flue-explainer.html">Part 1</a>? Skills live inside it. When the user (or the agent itself) invokes <code>/test</code>, the harness loads <code>.agents/skills/test.md</code> into the model's prompt as a workflow to follow. The model now has explicit steps to execute — not a free-form "do testing." This is how the harness turns markdown files into enforceable behavior.
+</div>
+
+<div class="callout">
   <strong>The test:</strong> If you could paste the skill into a PR checklist and a human could follow it step-by-step, it's a skill. If it reads like a style guide, it's reference material — and agents will skip it.
 </div>
 
@@ -309,6 +313,13 @@
 <!-- SECTION 3: SDLC PHASES -->
 <div class="section-label">The 6 SDLC Phases</div>
 <h2>Skills map to the full software development lifecycle</h2>
+
+<div class="callout" style="background:#F0FDF4;border-left-color:#16A34A;">
+  <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#166534;margin-bottom:6px;">New to "SDLC"? Read this first.</div>
+  <div style="font-size:14px;line-height:1.55;">
+    SDLC stands for <strong>Software Development Lifecycle</strong> — the named stages every feature goes through, from idea to shipped product. Senior engineers move through these stages instinctively: define what to build → plan the work → build it → verify it works → review for issues → ship safely. AI agents skip most of these stages by default. The 6 skills below give the agent the same instincts.
+  </div>
+</div>
 
 <p>Addy's system organizes skills around six phases of software development. Each phase has a corresponding skill — a slash command the agent invokes when that phase is active. Click each phase to see what it checks.</p>
 

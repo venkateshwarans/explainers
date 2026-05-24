@@ -183,6 +183,43 @@
   </div>
 </div>
 
+<!-- JARGON DECODER -->
+<div class="section-label">Before the Code</div>
+<h2>A quick decoder for the jargon ahead</h2>
+
+<p>The next section shows real Flue code. You'll see several library and platform names that may be unfamiliar. Here's what each one is, in plain terms:</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0;">
+  <div style="padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;line-height:1.55;">
+    <strong style="color:var(--accent);font-family:var(--font-mono);font-size:12px;">TypeScript</strong><br>JavaScript with type annotations. <code>name: string</code> means "this variable holds text." If you can read JavaScript, you can read TypeScript — the extra syntax is just labels.
+  </div>
+  <div style="padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;line-height:1.55;">
+    <strong style="color:var(--accent);font-family:var(--font-mono);font-size:12px;">FlueContext</strong><br>An object Flue passes to your agent function. It contains <code>init</code> (to create a harness), <code>payload</code> (the input), and <code>env</code> (secrets/env vars).
+  </div>
+  <div style="padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;line-height:1.55;">
+    <strong style="color:var(--accent);font-family:var(--font-mono);font-size:12px;">valibot</strong><br>A small library for validating data shapes. <code>v.string()</code> means "this must be text." Flue uses it to validate the agent's structured output.
+  </div>
+  <div style="padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;line-height:1.55;">
+    <strong style="color:var(--accent);font-family:var(--font-mono);font-size:12px;">just-bash</strong><br>A lightweight virtual bash shell that runs in-process. Powers Flue's default sandbox — much faster than spinning up a real Docker container.
+  </div>
+  <div style="padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;line-height:1.55;">
+    <strong style="color:var(--accent);font-family:var(--font-mono);font-size:12px;">Daytona</strong><br>A cloud service that gives you a real Linux container on demand. Use it when your agent needs a full development environment (git, Node, browser).
+  </div>
+  <div style="padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;line-height:1.55;">
+    <strong style="color:var(--accent);font-family:var(--font-mono);font-size:12px;">MCP</strong><br>Model Context Protocol. A standard way for AI tools to plug into external services (GitHub, Slack, databases). Like USB for AI agents.
+  </div>
+  <div style="padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;line-height:1.55;">
+    <strong style="color:var(--accent);font-family:var(--font-mono);font-size:12px;">Durable Object</strong><br>A Cloudflare Workers primitive that gives you stateful storage attached to a specific identifier. Flue uses these to persist session state on Cloudflare.
+  </div>
+  <div style="padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;line-height:1.55;">
+    <strong style="color:var(--accent);font-family:var(--font-mono);font-size:12px;">AGENTS.md</strong><br>The markdown rulebook from Part 1. Flue reads it from your project root and injects it into every model call. Your team's conventions become the agent's defaults.
+  </div>
+</div>
+
+<div class="callout">
+  <strong>Don't memorize this.</strong> Hover or scroll back to this card as you read the code below. The point is to give you a mental footing — not to teach you every library upfront.
+</div>
+
 <!-- DEMO 1: CODE ANATOMY -->
 <div class="section-label">Core Concepts in Code</div>
 <h2>What a Flue agent looks like</h2>
@@ -404,6 +441,49 @@
     <p class="caption">The model only sees what the harness assembles for it. Your system prompt, active skills, session context, and secrets are all injected by the harness — not by the user's message.</p>
   </div>
 </div>
+
+<!-- WALKTHROUGH -->
+<div class="section-label">What Actually Happens</div>
+<h2>From <code>flue dev</code> to a running agent</h2>
+
+<p>Before the 5-step setup, here's what happens when you actually run a Flue agent. This is the mental model — what's going on behind the scenes when you fire up a development server.</p>
+
+<div style="background:#1E1E2E;color:#CDD6F4;border-radius:var(--radius);padding:20px;margin:20px 0;font-family:var(--font-mono);font-size:12.5px;line-height:1.8;">
+  <span style="color:#6C7086;"># 1. You start the dev server</span><br>
+  $ <span style="color:#A6E3A1;">flue dev --target node</span><br>
+  <span style="color:#89B4FA;">→ Flue scans .flue/agents/ for agent files</span><br>
+  <span style="color:#89B4FA;">→ Starts HTTP server on port 3583</span><br>
+  <span style="color:#89B4FA;">→ Watches files; reloads on change</span><br>
+  <br>
+  <span style="color:#6C7086;"># 2. You send a request</span><br>
+  $ <span style="color:#A6E3A1;">curl localhost:3583/agents/review/my-session \</span><br>
+  <span style="color:#A6E3A1;">&nbsp;&nbsp;&nbsp;&nbsp;-d '{"prNumber": 42}'</span><br>
+  <br>
+  <span style="color:#6C7086;"># 3. Flue routes to your agent function</span><br>
+  <span style="color:#F38BA8;">→ Loads .flue/agents/review.ts</span><br>
+  <span style="color:#F38BA8;">→ Calls your default function({ init, payload, env })</span><br>
+  <span style="color:#F38BA8;">&nbsp;&nbsp;payload = { prNumber: 42 }</span><br>
+  <br>
+  <span style="color:#6C7086;"># 4. Your function calls init() — the harness boots</span><br>
+  <span style="color:#CBA6F7;">→ Sandbox starts (just-bash by default)</span><br>
+  <span style="color:#CBA6F7;">→ AGENTS.md loaded from project root</span><br>
+  <span style="color:#CBA6F7;">→ Skills indexed from .agents/skills/</span><br>
+  <span style="color:#CBA6F7;">→ Session opens (memory + history)</span><br>
+  <br>
+  <span style="color:#6C7086;"># 5. Your function calls session.skill('review', ...)</span><br>
+  <span style="color:#F9E2AF;">→ review.md loaded as workflow</span><br>
+  <span style="color:#F9E2AF;">→ Model called with skill instructions + payload</span><br>
+  <span style="color:#F9E2AF;">→ Model runs steps in workflow (tool calls in sandbox)</span><br>
+  <span style="color:#F9E2AF;">→ Returns structured result validated against schema</span><br>
+  <br>
+  <span style="color:#6C7086;"># 6. Your function returns the data</span><br>
+  <span style="color:#A6E3A1;">→ Flue serializes as JSON, sends HTTP 200 to client</span><br>
+  <span style="color:#A6E3A1;">→ Session persisted (for "my-session" id)</span><br>
+  <br>
+  <span style="color:#6C7086;"># Next request to same /my-session url = same session continues</span>
+</div>
+
+<p>Notice what you didn't have to write: the HTTP server, the routing, the sandbox setup, the model API client, the session persistence, the schema validation, the skill loading. Flue handles all of that. You write the orchestration: which skill to invoke, what payload, what shape of result to expect.</p>
 
 <!-- SECTION 3: BUILD STEPS -->
 <div class="section-label">Getting Started</div>

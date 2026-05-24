@@ -491,13 +491,36 @@
   <strong>The pattern:</strong> A harness doesn't make the powerful thing more powerful. It makes the powerful thing <em>useful, safe, and directed</em>. That's exactly what a harness does for an AI model.
 </div>
 
+<!-- ── INTERLUDE: WHAT IS AN AI MODEL ── -->
+<div class="section-label">Quick Detour</div>
+<h2>Wait — what <em>is</em> an AI model, exactly?</h2>
+
+<p>If you're a little fuzzy on what an "AI model" actually is, this section is for you. (If you already know, skip ahead.)</p>
+
+<p>An AI model — like Claude, GPT, or Gemini — is a giant statistical pattern-matcher trained on huge amounts of text. You give it some text, and it predicts what text should come next. That's the whole trick.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0;">
+  <div style="padding:16px;border-radius:8px;background:var(--demo-bg);border:1.5px solid var(--border);">
+    <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:8px;">You send →</div>
+    <div style="font-family:var(--font-mono);font-size:13px;color:var(--text);">"Translate to French:<br>Hello, world."</div>
+  </div>
+  <div style="padding:16px;border-radius:8px;background:var(--accent-bg);border:1.5px solid var(--accent);">
+    <div style="font-family:var(--font-mono);font-size:11px;color:var(--accent);margin-bottom:8px;">← Model returns</div>
+    <div style="font-family:var(--font-mono);font-size:13px;color:var(--text);">"Bonjour le monde."</div>
+  </div>
+</div>
+
+<p>That's it. Text in, text out. The model doesn't remember anything between calls. It has no awareness of files on your computer, no ability to run commands, no concept of "your codebase" or "your team's standards." It just predicts the next text.</p>
+
+<p>That's why a raw model is so limited — and why the harness exists. Everything you actually want to <em>do</em> with an AI (read your files, run your tests, remember your project) lives in the harness around the model, not in the model itself.</p>
+
 <!-- ── SECTION 2: MODEL VS AGENT ── -->
 <div class="section-label">Part 2</div>
 <h2>A model is not an agent. What's missing?</h2>
 
-<p>Here's the thing most people misunderstand about AI: what you're paying for in a tool like Claude Code or GitHub Copilot is <em>not</em> the model. Models are increasingly commoditized. What you're paying for is the harness around it.</p>
+<p>Now you know what a model is: a text-in, text-out pattern-matcher. So when you use Claude Code or GitHub Copilot, what are you actually paying for? Hint: it's not the model — models are increasingly commoditized. You're paying for the harness around it.</p>
 
-<p>A raw AI model is just a text predictor. You give it text, it predicts what comes next. That's genuinely impressive — but it can't:</p>
+<p>Here's what a raw model <em>can't</em> do on its own:</p>
 
 <div style="display: grid; gap: 8px; margin: 20px 0;">
   <div style="padding: 10px 16px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; display: flex; gap: 12px; align-items: flex-start;">
@@ -802,6 +825,29 @@
 
 <div class="callout">
   <strong>The key insight to carry forward:</strong> When your AI agent does something wrong, your first instinct might be "I need a better model." Nine times out of ten, you need a better harness. The model already has the capability — the harness isn't channeling it correctly.
+</div>
+
+<div class="section-label">Continue the Series</div>
+<h2>You've got the foundation. Here's what's next.</h2>
+
+<p>This explainer is Part 1 of a 4-part series. Each part builds on the harness concept you just learned — exploring one specific dimension of how harnesses actually work in production.</p>
+
+<div class="next-grid">
+  <a href="agent-skills-explainer.html" class="next-card" style="text-decoration:none;color:inherit;display:block;">
+    <div class="nc-label">Next · Part 2</div>
+    <div class="nc-title">Agent Skills →</div>
+    <div class="nc-body">How markdown workflow files make agents write specs, run tests, and review code — the senior-engineering work agents skip by default. With the SDLC phase explorer and anti-rationalization tables from Addy Osmani.</div>
+  </a>
+  <a href="long-running-agents-explainer.html" class="next-card" style="text-decoration:none;color:inherit;display:block;">
+    <div class="nc-label">Part 3</div>
+    <div class="nc-title">Long-Running Agents →</div>
+    <div class="nc-body">What happens when an agent runs for hours or days. Context rot, the Ralph loop, brain/hands/session architecture. Includes an animated context window fill demo.</div>
+  </a>
+  <a href="flue-build-explainer.html" class="next-card" style="text-decoration:none;color:inherit;display:block;">
+    <div class="nc-label">Part 4</div>
+    <div class="nc-title">Building with Flue →</div>
+    <div class="nc-body">Everything from Parts 1–3 as real TypeScript code. Walk through the actual Flue API: <code>init()</code>, <code>session.skill()</code>, sandbox options, deployment targets. Hands-on.</div>
+  </a>
 </div>
 
 <div class="credits">

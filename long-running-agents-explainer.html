@@ -206,6 +206,16 @@
 
 <p>These aren't edge cases. They happen in every long-running agent. The harness has specific patterns to address each one.</p>
 
+<!-- BEGINNER PRIMER -->
+<div class="callout" style="background:#1E1E2E;color:#CDD6F4;border-left-color:#818CF8;">
+  <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#818CF8;margin-bottom:8px;">First time hearing these terms? Read this.</div>
+  <div style="font-size:14px;line-height:1.6;">
+    <strong style="color:#A6E3A1;">Token</strong> — the unit AI models read and write in. A token is roughly ¾ of a word. "Hello world" is about 2 tokens; this paragraph is around 100. Models charge per token and have a maximum tokens they can hold at once.<br><br>
+    <strong style="color:#A6E3A1;">Context window</strong> — the model's working memory. Everything the model "sees" right now — your message, the system prompt, tool outputs, prior conversation — must fit inside this window. Claude Sonnet 4.6 has a 200,000-token window. That sounds huge, but a long coding session fills it fast.<br><br>
+    <strong style="color:#A6E3A1;">Frontier model</strong> — the most capable (and expensive) model from a given lab: Claude Opus 4.7, GPT-5.5, Gemini 3 Ultra. Smaller, faster models exist below them — and sometimes outperform frontier models for narrow tasks where structure matters more than raw capability.
+  </div>
+</div>
+
 <!-- DEMO 1: CONTEXT ROT ANIMATION -->
 <div class="demo">
   <div class="demo-header">
@@ -407,7 +417,7 @@
   <div class="pattern-card">
     <div class="p-label">Pattern 5</div>
     <div class="p-title">Fleet orchestration</div>
-    <div class="p-body">A coordinator agent spawns specialist sub-agents for isolated tasks. Each sub-agent has its own identity and context, preventing cascading failures — if one specialist fails, it doesn't corrupt the state of the others. The coordinator aggregates results.</div>
+    <div class="p-body">A coordinator agent spawns specialist <em>sub-agents</em> — child agents with their own context, identity, and focused job — for isolated tasks. Think of it like a manager delegating to specialists who each work in their own conference room. Each sub-agent has its own context, preventing cascading failures: if one specialist fails, it doesn't corrupt the state of the others. The coordinator aggregates results.</div>
   </div>
 </div>
 
