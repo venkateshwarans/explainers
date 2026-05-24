@@ -1,0 +1,27 @@
+agent-skills-explainer.html
+  s_1d332875577bde::t_4bb1fdf983815c 1-635
+agent-harness-flue-explainer.html
+  s_1d332875577bde::t_4bb1fdf983815c 378-424,429-444
+flue-build-explainer.html
+  s_1d332875577bde::t_4bb1fdf983815c 1-678
+long-running-agents-explainer.html
+  s_1d332875577bde::t_4bb1fdf983815c 1-604
+index.html
+  s_1d332875577bde::t_8e1b2395c05a39 226-227,232-249
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "f2a749df0bb12a6f813b3e18e9e3ffcc5b3eda3d",
+  "prompts": {},
+  "sessions": {
+    "s_1d332875577bde": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7d792d6-050c-42f9-8f71-140ea3a9dd2d",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Venkateshwaran Selvaraj <venkateshwaran.selvaraj+github@gmail.com>"
+    }
+  }
+}
