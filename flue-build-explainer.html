@@ -734,7 +734,7 @@ $ <span style="color:#A6E3A1;">flue dev --target cloudflare --env .env</span>
     steps:
       - uses: actions/checkout@v4
       - run: bun install
-      - run: <span style="color:#A6E3A1;">flue run review --payload '{"prNumber":${{ github.event.pull_request.number }}'</span>
+      - run: <span style="color:#A6E3A1;">flue run review --payload '{"prNumber":\${{ github.event.pull_request.number }}'</span>
         env:
           GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}`,
   cli: `<span style="color:#6C7086;"># Run any agent from the CLI — perfect for CI or one-shot tasks</span>
