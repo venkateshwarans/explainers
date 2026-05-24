@@ -1,0 +1,15 @@
+flue-build-explainer.html
+  ai_agent 186-222,445-486
+agent-harness-flue-explainer.html
+  ai_agent 494-516,521,523,830-850
+agent-skills-explainer.html
+  ai_agent 249-251,317-322
+long-running-agents-explainer.html
+  ai_agent 209-218,420
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "d83aa87a5725e9d43d4eeed25603cd5308f44173",
+  "prompts": {}
+}
