@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Skills — an interactive explainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Figtree:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#FAF9F7; --surface:#FFFFFF; --demo-bg:#F3F2EE;
+      --text:#2D2D2D; --text-muted:#666666; --border:#E5E5E0;
+      --accent:#D97757; --accent-bg:#FDF0EB;
+      --good:#16A34A; --bad:#DC2626; --warn:#D97706;
+      --font-serif:'Newsreader',Georgia,serif;
+      --font-sans:'Figtree',system-ui,sans-serif;
+      --font-mono:'Source Code Pro',ui-monospace,monospace;
+      --radius:12px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:17px;line-height:1.68;padding:0 0 120px;}
+    a{color:var(--accent);}
+    p{margin-bottom:15px;}
+    code{font-family:var(--font-mono);font-size:13px;background:var(--demo-bg);padding:1px 6px;border-radius:4px;}
+    strong{color:var(--text);}
+
+    /* SERIES NAV */
+    .series-nav{background:#1a1625;border-bottom:1px solid rgba(217,119,87,0.15);position:sticky;top:0;z-index:100;}
+    .sn-inner{max-width:1060px;margin:0 auto;display:flex;align-items:stretch;gap:0;padding:0 24px;overflow-x:auto;}
+    .sn-series-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(217,119,87,0.5);white-space:nowrap;padding:0 14px 0 0;margin-right:10px;display:flex;align-items:center;border-right:1px solid rgba(217,119,87,0.12);flex-shrink:0;}
+    .sn-steps{display:flex;align-items:stretch;gap:0;flex:1;}
+    .sn-step{text-decoration:none;padding:11px 12px;display:flex;align-items:center;gap:5px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.15s;}
+    .sn-step .sn-num{font-family:var(--font-mono);font-size:10px;color:rgba(253,240,235,0.25);}
+    .sn-step .sn-title{font-family:var(--font-sans);font-size:12px;color:rgba(253,240,235,0.4);}
+    .sn-step.done .sn-title{color:rgba(253,240,235,0.55);}
+    .sn-step.active{border-bottom-color:#D97757;}
+    .sn-step.active .sn-title{color:#D97757;font-weight:600;}
+    .sn-step:hover .sn-title{color:rgba(253,240,235,0.8);}
+    .sn-arrows{margin-left:auto;display:flex;align-items:center;gap:6px;padding:8px 0 8px 14px;flex-shrink:0;border-left:1px solid rgba(217,119,87,0.12);}
+    .sn-arrows a{font-family:var(--font-mono);font-size:11px;padding:4px 10px;border-radius:6px;text-decoration:none;color:rgba(253,240,235,0.5);border:1px solid rgba(217,119,87,0.2);transition:all 0.15s;white-space:nowrap;}
+    .sn-arrows a:hover{background:rgba(217,119,87,0.12);color:#D97757;border-color:rgba(217,119,87,0.4);}
+    .sn-arrows a.disabled{opacity:0.3;pointer-events:none;}
+
+    /* HERO */
+    .hero{background:linear-gradient(160deg,#0f1a0f 0%,#0a120a 60%,#060d06 100%);padding:64px 24px 72px;text-align:center;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,rgba(22,163,74,0.15) 0%,transparent 65%);}
+    .hero-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(22,163,74,0.7);margin-bottom:18px;position:relative;}
+    .hero h1{font-family:var(--font-serif);font-size:clamp(34px,5.5vw,58px);font-weight:700;letter-spacing:-0.02em;line-height:1.05;color:#F0FDF4;margin-bottom:18px;position:relative;}
+    .hero h1 em{color:#4ADE80;font-style:normal;}
+    .hero .subtitle{font-size:17px;color:rgba(240,253,244,0.6);max-width:520px;margin:0 auto 28px;line-height:1.5;position:relative;}
+    .hero-badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;position:relative;}
+    .badge{font-family:var(--font-mono);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid rgba(22,163,74,0.3);color:rgba(240,253,244,0.55);background:rgba(22,163,74,0.08);}
+
+    /* LAYOUT */
+    .content{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:56px;align-items:start;padding:56px 24px 0;}
+    @media(max-width:880px){.content{grid-template-columns:1fr;}aside{display:none;}}
+
+    /* TYPE */
+    .section-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#16A34A;display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:52px;}
+    .section-label::before{content:'';flex:0 0 24px;height:1px;background:#16A34A;}
+    h2{font-family:var(--font-serif);font-size:clamp(22px,3vw,28px);font-weight:600;letter-spacing:-0.01em;line-height:1.2;margin-bottom:16px;}
+    .callout{border-left:3px solid #16A34A;background:#F0FDF4;border-radius:0 var(--radius) var(--radius) 0;padding:14px 18px;margin:20px 0;font-size:15px;}
+    .callout strong{color:#166534;}
+    .quote-block{border-left:3px solid var(--accent);padding:8px 0 8px 20px;margin:20px 0;font-family:var(--font-serif);font-size:17px;font-style:italic;color:var(--text);}
+    .quote-block cite{display:block;margin-top:6px;font-size:13px;font-style:normal;font-family:var(--font-mono);color:var(--text-muted);}
+
+    /* DEMOS */
+    .demo{border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);margin:28px 0;overflow:hidden;}
+    .demo-header{background:var(--demo-bg);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:10px;}
+    .demo-title{font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);flex:1;}
+    .demo-body{padding:24px;}
+    .caption{font-size:13px;color:var(--text-muted);margin-top:14px;line-height:1.5;font-style:italic;}
+
+    /* SHORTCUT DEMO */
+    .shortcut-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    @media(max-width:600px){.shortcut-grid{grid-template-columns:1fr;}}
+    .shortcut-panel{border-radius:8px;overflow:hidden;border:1.5px solid var(--border);}
+    .sp-header{padding:10px 14px;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;}
+    .sp-header.bad{background:#FEF2F2;color:var(--bad);border-bottom:1px solid #FECACA;}
+    .sp-header.good{background:#F0FDF4;color:var(--good);border-bottom:1px solid #A7F3D0;}
+    .sp-steps{padding:12px 14px;min-height:220px;}
+    .sp-step{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;animation:fadeIn 0.3s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+    .sp-step .ss-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+    .sp-step .ss-text{line-height:1.4;}
+    .sp-step.skipped .ss-text{color:var(--bad);text-decoration:line-through;opacity:0.6;}
+    .sp-step.done .ss-text{color:var(--good);}
+    .sp-step.pending .ss-text{color:var(--text-muted);}
+    .run-btn{display:block;width:100%;padding:9px;text-align:center;font-family:var(--font-mono);font-size:12px;border:none;cursor:pointer;font-weight:600;transition:opacity 0.15s;}
+    .run-btn.bad{background:#FEF2F2;color:var(--bad);}
+    .run-btn.bad:hover{background:#FEE2E2;}
+    .run-btn.good{background:#F0FDF4;color:var(--good);}
+    .run-btn.good:hover{background:#DCFCE7;}
+
+    /* SKILL ANATOMY */
+    .skill-file{background:#1E1E2E;border-radius:10px;padding:0;overflow:hidden;}
+    .sf-topbar{background:#313244;padding:8px 16px;display:flex;align-items:center;gap:8px;}
+    .sf-dot{width:12px;height:12px;border-radius:50%;}
+    .sf-filename{font-family:var(--font-mono);font-size:12px;color:#A6ADC8;margin-left:4px;}
+    .sf-body{padding:16px 20px;font-family:var(--font-mono);font-size:12.5px;line-height:1.8;color:#CDD6F4;}
+    .sf-line{display:flex;gap:12px;position:relative;}
+    .sf-line:hover .sf-annotation{opacity:1;}
+    .sf-key{color:#89B4FA;}
+    .sf-val{color:#A6E3A1;}
+    .sf-comment{color:#6C7086;}
+    .sf-heading{color:#CBA6F7;font-weight:600;}
+    .sf-step-text{color:#CDD6F4;}
+    .sf-check{color:#F38BA8;}
+    .sf-annotation{
+      position:absolute;left:calc(100% + 16px);top:0;
+      background:var(--accent);color:white;
+      font-size:11px;font-family:var(--font-sans);
+      padding:4px 10px;border-radius:6px;white-space:nowrap;
+      opacity:0;transition:opacity 0.2s;pointer-events:none;
+      z-index:10;
+    }
+
+    /* SDLC TABS */
+    .sdlc-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0;background:var(--demo-bg);}
+    .sdlc-tab{padding:10px 14px;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;appearance:none;transition:color 0.15s;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;}
+    .sdlc-tab.active{color:#16A34A;border-bottom-color:#16A34A;}
+    .sdlc-panel{display:none;padding:20px 24px;}
+    .sdlc-panel.active{display:block;}
+    .phase-card{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    @media(max-width:600px){.phase-card{grid-template-columns:1fr;}}
+    .pc-left h4{font-family:var(--font-serif);font-size:18px;font-weight:600;margin-bottom:8px;}
+    .pc-left p{font-size:14px;color:var(--text-muted);line-height:1.55;margin-bottom:12px;}
+    .pc-left .phase-tag{display:inline-block;font-family:var(--font-mono);font-size:11px;padding:3px 8px;border-radius:4px;background:#F0FDF4;color:#166534;border:1px solid #A7F3D0;margin-bottom:12px;}
+    .pc-right{background:#1E1E2E;border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:11.5px;line-height:1.7;color:#CDD6F4;}
+    .pc-right .r-comment{color:#6C7086;}
+    .pc-right .r-step{color:#A6E3A1;}
+    .pc-right .r-check{color:#F38BA8;}
+    .pc-right .r-heading{color:#89B4FA;}
+
+    /* ANTI-RAT TABLE */
+    .ant-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+    .ant-table th{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:8px 14px;border-bottom:1.5px solid var(--border);background:var(--demo-bg);}
+    .ant-table td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;}
+    .ant-table tr:last-child td{border-bottom:none;}
+    .ant-table .excuse{color:var(--bad);font-style:italic;}
+    .ant-table .counter{color:#166534;}
+
+    /* PRINCIPLES */
+    .principles-grid{display:grid;gap:10px;margin:20px 0;}
+    .principle-card{padding:14px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);display:flex;gap:12px;align-items:flex-start;}
+    .principle-card .pc-num{font-family:var(--font-mono);font-size:14px;font-weight:700;color:#16A34A;flex-shrink:0;width:20px;}
+    .principle-card .pc-title{font-weight:600;font-size:14px;margin-bottom:3px;}
+    .principle-card .pc-body{font-size:13px;color:var(--text-muted);line-height:1.5;}
+
+    /* ASIDE */
+    aside{position:sticky;top:60px;align-self:start;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:18px 18px 8px;}
+    aside .label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
+    aside dl dt{font-family:var(--font-serif);font-size:15px;color:var(--text);margin-top:12px;}
+    aside dl dd{font-size:13px;color:var(--text-muted);margin:3px 0 10px;line-height:1.5;}
+
+    hr{border:none;border-top:1px solid var(--border);margin:48px 0;}
+    .credits{margin-top:60px;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:20px;}
+    .credits a{color:var(--text-muted);text-decoration:underline;}
+
+    button.primary{appearance:none;border:1.5px solid #16A34A;background:#16A34A;color:white;border-radius:8px;font-family:var(--font-mono);font-size:12px;padding:7px 16px;cursor:pointer;transition:opacity 0.15s;}
+    button.primary:hover{opacity:0.85;}
+  </style>
+</head>
+<body>
+
+<nav class="series-nav">
+  <div class="sn-inner">
+    <div class="sn-series-label">Agent Engineering Series</div>
+    <div class="sn-steps">
+      <a href="agent-harness-flue-explainer.html" class="sn-step done"><span class="sn-num">1</span><span class="sn-title">What is a Harness?</span></a>
+      <a href="agent-skills-explainer.html" class="sn-step active"><span class="sn-num">2</span><span class="sn-title">Agent Skills</span></a>
+      <a href="long-running-agents-explainer.html" class="sn-step"><span class="sn-num">3</span><span class="sn-title">Long-Running Agents</span></a>
+      <a href="flue-build-explainer.html" class="sn-step"><span class="sn-num">4</span><span class="sn-title">Building with Flue</span></a>
+    </div>
+    <div class="sn-arrows">
+      <a href="agent-harness-flue-explainer.html">← Prev</a>
+      <a href="long-running-agents-explainer.html">Next →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Series · Part 2 of 4 · Agent Engineering</div>
+  <h1>Agent Skills<br><em>Encoding Senior Engineering Discipline</em></h1>
+  <p class="subtitle">AI agents take the shortest path to "done" — skipping specs, tests, and reviews. Skills are the harness component that enforces the invisible work.</p>
+  <div class="hero-badges">
+    <span class="badge">continues from Part 1</span>
+    <span class="badge">workflow design</span>
+    <span class="badge">SDLC phases</span>
+  </div>
+</div>
+
+<div class="content">
+<main>
+
+<div class="section-label">The Problem</div>
+<h2>Agents are junior engineers by default</h2>
+
+<p>When you ask an AI agent to implement a feature, it does exactly that. It writes the code, runs a quick check, and says "done." What it doesn't do — unless you tell it to — is write a spec first, create tests before the implementation, or prepare a proper code review.</p>
+
+<p>This isn't a bug. It's the agent doing what it was optimized to do: reach "task complete" as efficiently as possible. That's the right behaviour for a language model. It's the wrong behaviour for a software engineer.</p>
+
+<div class="quote-block">
+  "The default behaviour of any AI coding agent is to take the shortest path to done."
+  <cite>— Addy Osmani, Agent Skills</cite>
+</div>
+
+<p>The invisible work of senior engineering — specification writing, test-driven development, scope discipline, code review — doesn't appear in code diffs. Nobody sees it. The agent has no signal telling it to do those things, so it skips them.</p>
+
+<p><strong>Skills</strong> are the harness component that fixes this. They're markdown workflow files that inject senior-engineering steps directly into the agent's execution path — with checkpoints that produce <em>evidence</em>, not just assertions.</p>
+
+<!-- DEMO 1: SHORTCUT VS SKILL -->
+<div class="demo">
+  <div class="demo-header">
+    <div class="demo-title">Demo · "Add user authentication" — with vs without a skill</div>
+    <button class="primary" onclick="runDemo()">▶ Run both agents</button>
+  </div>
+  <div class="demo-body">
+    <div class="shortcut-grid">
+      <div class="shortcut-panel">
+        <div class="sp-header bad">Without a skill</div>
+        <div class="sp-steps" id="steps-bad">
+          <div style="font-size:13px;color:var(--text-muted);padding:8px 0;">Click Run to simulate…</div>
+        </div>
+        <button class="run-btn bad" onclick="runBad()">Run agent (no skill)</button>
+      </div>
+      <div class="shortcut-panel">
+        <div class="sp-header good">With /spec + /build + /test skills</div>
+        <div class="sp-steps" id="steps-good">
+          <div style="font-size:13px;color:var(--text-muted);padding:8px 0;">Click Run to simulate…</div>
+        </div>
+        <button class="run-btn good" onclick="runGood()">Run agent (with skills)</button>
+      </div>
+    </div>
+    <p class="caption">Both agents implement "user authentication." One ships in 40 seconds and may work. The other ships with a spec, tests that pass, and a review checklist — and will definitely work.</p>
+  </div>
+</div>
+
+<!-- SECTION 2: WHAT A SKILL IS -->
+<div class="section-label">What is a Skill, Exactly?</div>
+<h2>A skill is a workflow, not a document</h2>
+
+<p>A skill is a markdown file with frontmatter. But its purpose is not documentation — it's execution. The distinction matters enormously.</p>
+
+<p>Reference material gets read once and ignored. A skill is a <em>sequence of steps the agent follows</em>, with checkpoints that produce concrete evidence, ending in a defined exit criterion. The agent doesn't summarize the skill — it follows it.</p>
+
+<div class="callout">
+  <strong>The test:</strong> If you could paste the skill into a PR checklist and a human could follow it step-by-step, it's a skill. If it reads like a style guide, it's reference material — and agents will skip it.
+</div>
+
+<!-- DEMO 2: SKILL ANATOMY -->
+<div class="demo">
+  <div class="demo-header">
+    <div class="demo-title">Demo · Anatomy of a Skill File — hover each section</div>
+  </div>
+  <div class="demo-body">
+    <div class="skill-file">
+      <div class="sf-topbar">
+        <div class="sf-dot" style="background:#FF5F57;"></div>
+        <div class="sf-dot" style="background:#FEBC2E;"></div>
+        <div class="sf-dot" style="background:#28C840;"></div>
+        <div class="sf-filename">.claude/skills/test.md</div>
+      </div>
+      <div class="sf-body" style="position:relative;">
+        <div class="sf-line" style="margin-bottom:4px;"><span class="sf-comment">---</span></div>
+        <div class="sf-line" title="The slash command that invokes this skill" style="cursor:help;">
+          <span><span class="sf-key">name:</span> <span class="sf-val">test</span></span>
+          <div class="sf-annotation">Slash command: /test activates this workflow</div>
+        </div>
+        <div class="sf-line" title="What the agent reads to decide when to use this" style="cursor:help;">
+          <span><span class="sf-key">description:</span> <span class="sf-val">Write and run tests that prove the feature works</span></span>
+          <div class="sf-annotation">Agent reads this to decide when to invoke the skill</div>
+        </div>
+        <div class="sf-line" style="margin-bottom:4px;"><span class="sf-comment">---</span></div>
+        <br>
+        <div class="sf-line"><span class="sf-heading"># /test — Verification Workflow</span></div>
+        <br>
+        <div class="sf-line" title="Phase marker — skills are scoped to one SDLC phase" style="cursor:help;">
+          <span><span class="sf-comment">## Phase: Verify</span></span>
+          <div class="sf-annotation">Skills belong to one SDLC phase — they're loaded only when that phase is active</div>
+        </div>
+        <br>
+        <div class="sf-line"><span class="sf-step-text">1. Read the spec in docs/spec.md before writing any test</span></div>
+        <div class="sf-line"><span class="sf-step-text">2. Write a failing test first (red)</span></div>
+        <div class="sf-line"><span class="sf-step-text">3. Implement the minimum code to make it pass (green)</span></div>
+        <div class="sf-line"><span class="sf-step-text">4. Refactor without breaking the test (refactor)</span></div>
+        <br>
+        <div class="sf-line" title="Exit criteria — concrete evidence required to complete" style="cursor:help;">
+          <span><span class="sf-heading">## Exit criteria</span></span>
+          <div class="sf-annotation">Every skill must end with concrete evidence — not "I think it works"</div>
+        </div>
+        <div class="sf-line"><span class="sf-check">✓ bun test output shows 0 failures</span></div>
+        <div class="sf-line"><span class="sf-check">✓ Coverage includes the new code path</span></div>
+        <div class="sf-line"><span class="sf-check">✓ No .skip() or .todo() in the test file</span></div>
+        <br>
+        <div class="sf-line" title="Anti-rationalization — pre-written rebuttals to common shortcuts" style="cursor:help;">
+          <span><span class="sf-heading">## Do not skip because:</span></span>
+          <div class="sf-annotation">Anti-rationalization table: pre-written counters to excuses the agent will generate</div>
+        </div>
+        <div class="sf-line"><span class="sf-comment">- "This is simple" → Acceptance criteria still apply. Five tests is fine. Zero is not.</span></div>
+        <div class="sf-line"><span class="sf-comment">- "Later" → There is no later. Tests written after shipping are rarely written at all.</span></div>
+      </div>
+    </div>
+    <p class="caption">Hover over any section of the file to see what it does. The frontmatter, phase, steps, exit criteria, and anti-rationalization table are all required for a complete skill.</p>
+  </div>
+</div>
+
+<!-- SECTION 3: SDLC PHASES -->
+<div class="section-label">The 6 SDLC Phases</div>
+<h2>Skills map to the full software development lifecycle</h2>
+
+<p>Addy's system organizes skills around six phases of software development. Each phase has a corresponding skill — a slash command the agent invokes when that phase is active. Click each phase to see what it checks.</p>
+
+<div class="demo">
+  <div class="sdlc-tabs" id="sdlc-tabs">
+    <button class="sdlc-tab active" onclick="showPhase(this,'p-spec')">/spec</button>
+    <button class="sdlc-tab" onclick="showPhase(this,'p-plan')">/plan</button>
+    <button class="sdlc-tab" onclick="showPhase(this,'p-build')">/build</button>
+    <button class="sdlc-tab" onclick="showPhase(this,'p-test')">/test</button>
+    <button class="sdlc-tab" onclick="showPhase(this,'p-review')">/review</button>
+    <button class="sdlc-tab" onclick="showPhase(this,'p-ship')">/ship</button>
+  </div>
+  <div class="sdlc-panel active" id="p-spec">
+    <div class="phase-card">
+      <div class="pc-left">
+        <span class="phase-tag">Phase 1 · Define</span>
+        <h4>Write the spec first</h4>
+        <p>Before any code is written, this skill forces the agent to define what "done" looks like. What are the acceptance criteria? What exactly are you building? What are you <em>not</em> building?</p>
+        <p>Without a spec, agents drift. They implement what they think you want, which may not be what you need. Five lines of acceptance criteria prevents days of rework.</p>
+      </div>
+      <div class="pc-right">
+        <span class="r-comment"># /spec workflow</span><br><br>
+        <span class="r-heading">Steps:</span><br>
+        <span class="r-step">1. Ask: what problem does this solve?</span><br>
+        <span class="r-step">2. Define acceptance criteria (min 3)</span><br>
+        <span class="r-step">3. List explicitly out-of-scope items</span><br>
+        <span class="r-step">4. Write spec to docs/spec.md</span><br><br>
+        <span class="r-heading">Exit criteria:</span><br>
+        <span class="r-check">✓ docs/spec.md exists and is &gt;100 chars</span><br>
+        <span class="r-check">✓ At least 3 acceptance criteria listed</span><br>
+        <span class="r-check">✓ Out-of-scope section is non-empty</span>
+      </div>
+    </div>
+  </div>
+  <div class="sdlc-panel" id="p-plan">
+    <div class="phase-card">
+      <div class="pc-left">
+        <span class="phase-tag">Phase 2 · Plan</span>
+        <h4>Break work into vertical slices</h4>
+        <p>Planning skill forces the agent to decompose the spec into concrete tasks — not "implement authentication" but "add password hashing to user model," "write JWT generation," "add login endpoint." Small, independently shippable units.</p>
+        <p>Agents that plan first make fewer wrong turns. They can verify each slice before moving on.</p>
+      </div>
+      <div class="pc-right">
+        <span class="r-comment"># /plan workflow</span><br><br>
+        <span class="r-heading">Steps:</span><br>
+        <span class="r-step">1. Read docs/spec.md</span><br>
+        <span class="r-step">2. Break into vertical slices (each deployable)</span><br>
+        <span class="r-step">3. Order by dependency</span><br>
+        <span class="r-step">4. Write tasks to docs/plan.md</span><br><br>
+        <span class="r-heading">Exit criteria:</span><br>
+        <span class="r-check">✓ Every task maps to a spec criterion</span><br>
+        <span class="r-check">✓ No task is &gt;4 hours of estimated work</span><br>
+        <span class="r-check">✓ Dependencies are explicit</span>
+      </div>
+    </div>
+  </div>
+  <div class="sdlc-panel" id="p-build">
+    <div class="phase-card">
+      <div class="pc-left">
+        <span class="phase-tag">Phase 3 · Build</span>
+        <h4>Implement in scope-disciplined slices</h4>
+        <p>The build skill enforces scope discipline — the agent touches only what it was asked to touch. No "while I'm here" refactors, no unsolicited improvements to adjacent files.</p>
+        <p>This prevents one of the most common agent failure patterns: a small feature turns into a major refactor that breaks unrelated things.</p>
+      </div>
+      <div class="pc-right">
+        <span class="r-comment"># /build workflow</span><br><br>
+        <span class="r-heading">Steps:</span><br>
+        <span class="r-step">1. Read the current task from plan.md</span><br>
+        <span class="r-step">2. Implement only that task</span><br>
+        <span class="r-step">3. Do not touch files not in task scope</span><br>
+        <span class="r-step">4. Mark task done in plan.md</span><br><br>
+        <span class="r-heading">Exit criteria:</span><br>
+        <span class="r-check">✓ Only files in scope were modified</span><br>
+        <span class="r-check">✓ Task marked complete in plan.md</span><br>
+        <span class="r-check">✓ Existing tests still pass</span>
+      </div>
+    </div>
+  </div>
+  <div class="sdlc-panel" id="p-test">
+    <div class="phase-card">
+      <div class="pc-left">
+        <span class="phase-tag">Phase 4 · Verify</span>
+        <h4>Prove it works — with evidence</h4>
+        <p>Not "I ran the tests." The test skill requires concrete evidence: test output showing zero failures, coverage numbers, no skipped tests. The agent can't claim success without producing the artifact that proves it.</p>
+        <p>"Later is the load-bearing word. There is no later." Every feature ships with tests — full stop.</p>
+      </div>
+      <div class="pc-right">
+        <span class="r-comment"># /test workflow</span><br><br>
+        <span class="r-heading">Steps:</span><br>
+        <span class="r-step">1. Write failing test first (TDD)</span><br>
+        <span class="r-step">2. Implement to make it pass</span><br>
+        <span class="r-step">3. Run full test suite</span><br>
+        <span class="r-step">4. Save output to test-report.txt</span><br><br>
+        <span class="r-heading">Exit criteria:</span><br>
+        <span class="r-check">✓ 0 test failures in output</span><br>
+        <span class="r-check">✓ No .skip() in test files</span><br>
+        <span class="r-check">✓ New code path has coverage</span>
+      </div>
+    </div>
+  </div>
+  <div class="sdlc-panel" id="p-review">
+    <div class="phase-card">
+      <div class="pc-left">
+        <span class="phase-tag">Phase 5 · Review</span>
+        <h4>Catch what the builder missed</h4>
+        <p>A separate review step — ideally a different agent or a fresh context — that reads the diff as an outsider. Did the implementation match the spec? Are there edge cases missing? Is there anything a future maintainer would find confusing?</p>
+        <p>Agents grading their own work have positive bias. The review skill breaks this by treating generation and evaluation as separate tasks.</p>
+      </div>
+      <div class="pc-right">
+        <span class="r-comment"># /review workflow</span><br><br>
+        <span class="r-heading">Steps:</span><br>
+        <span class="r-step">1. Read spec.md, then read the diff</span><br>
+        <span class="r-step">2. Check spec criteria are met</span><br>
+        <span class="r-step">3. Check for missing edge cases</span><br>
+        <span class="r-step">4. Write review.md with findings</span><br><br>
+        <span class="r-heading">Exit criteria:</span><br>
+        <span class="r-check">✓ Each spec criterion checked (✓/✗)</span><br>
+        <span class="r-check">✓ review.md is non-empty</span><br>
+        <span class="r-check">✓ Reviewer is not the implementer</span>
+      </div>
+    </div>
+  </div>
+  <div class="sdlc-panel" id="p-ship">
+    <div class="phase-card">
+      <div class="pc-left">
+        <span class="phase-tag">Phase 6 · Ship</span>
+        <h4>Deploy safely — with a rollback plan</h4>
+        <p>The ship skill is the last line of defense. Before anything goes to production, it checks: CI passes, docs are updated, a rollback procedure exists, and the team has been notified if the change is breaking.</p>
+        <p>Most agent disasters happen because nobody told the agent that "ship" means something specific in your system. This skill makes it explicit.</p>
+      </div>
+      <div class="pc-right">
+        <span class="r-comment"># /ship workflow</span><br><br>
+        <span class="r-heading">Steps:</span><br>
+        <span class="r-step">1. Check CI is green</span><br>
+        <span class="r-step">2. Check docs are updated</span><br>
+        <span class="r-step">3. Document rollback procedure</span><br>
+        <span class="r-step">4. Write deployment note</span><br><br>
+        <span class="r-heading">Exit criteria:</span><br>
+        <span class="r-check">✓ CI passes on main</span><br>
+        <span class="r-check">✓ CHANGELOG.md updated</span><br>
+        <span class="r-check">✓ Rollback procedure documented</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 4: 5 PRINCIPLES -->
+<div class="section-label">5 Design Principles</div>
+<h2>What makes a skill actually work</h2>
+
+<p>Not every markdown file works as a skill. These five principles separate skills that agents follow from reference material agents skip.</p>
+
+<div class="principles-grid">
+  <div class="principle-card">
+    <div class="pc-num">1</div>
+    <div><div class="pc-title">Process over prose</div><div class="pc-body">Steps and checklists drive action. Essays don't. A skill that says "ensure high code quality" will be ignored. A skill that says "run <code>tsc --noEmit</code> and save output to typecheck.txt" will be followed.</div></div>
+  </div>
+  <div class="principle-card">
+    <div class="pc-num">2</div>
+    <div><div class="pc-title">Anti-rationalization tables</div><div class="pc-body">Agents — like junior engineers — will generate plausible-sounding reasons to skip steps. "This is too simple for a spec." "Tests can wait." Pre-write the counter-argument directly in the skill file. The agent can't argue with a rule that already anticipated its excuse.</div></div>
+  </div>
+  <div class="principle-card">
+    <div class="pc-num">3</div>
+    <div><div class="pc-title">Verification is non-negotiable</div><div class="pc-body">Every skill must end with a concrete exit criterion — something the agent has to produce, not just assert. Not "tests pass." But "save the test output to test-report.txt showing 0 failures." Evidence beats claims.</div></div>
+  </div>
+  <div class="principle-card">
+    <div class="pc-num">4</div>
+    <div><div class="pc-title">Progressive disclosure</div><div class="pc-body">Don't load all 6 skills at startup. The harness reveals only the skill relevant to the current phase. A build session doesn't need the ship skill. Loading everything bloats context and confuses the agent about what phase it's in.</div></div>
+  </div>
+  <div class="principle-card">
+    <div class="pc-num">5</div>
+    <div><div class="pc-title">Scope discipline</div><div class="pc-body">"Touch only what you're asked to touch." Every skill should include this rule explicitly. The most common agent failure pattern is scope creep — one small change triggers an unasked-for refactor that breaks five other things.</div></div>
+  </div>
+</div>
+
+<!-- SECTION 5: ANTI-RAT TABLE -->
+<div class="section-label">Anti-Rationalization</div>
+<h2>Agents will try to skip steps. Skills have answers.</h2>
+
+<p>An agent optimizing for "task complete" will generate convincing-sounding reasons to skip anything that takes extra time. Skills pre-emptively answer every excuse. Here are the most common ones:</p>
+
+<div class="demo">
+  <div class="demo-header"><div class="demo-title">Demo · Common agent rationalizations and skill counter-arguments</div></div>
+  <div class="demo-body">
+    <table class="ant-table">
+      <thead>
+        <tr>
+          <th>What the agent says</th>
+          <th>The skill's counter</th>
+          <th>Phase</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="excuse">"This task is too simple to need a spec."</td>
+          <td class="counter">Acceptance criteria still apply. Five lines is fine. Zero lines is not.</td>
+          <td><code>/spec</code></td>
+        </tr>
+        <tr>
+          <td class="excuse">"I'll write tests later, after the implementation."</td>
+          <td class="counter">Later is the load-bearing word. There is no later. Tests are written before shipping — always.</td>
+          <td><code>/test</code></td>
+        </tr>
+        <tr>
+          <td class="excuse">"The tests pass, so it's ready to review."</td>
+          <td class="counter">Tests passing is necessary but not sufficient. Review checks spec coverage, not just test coverage.</td>
+          <td><code>/review</code></td>
+        </tr>
+        <tr>
+          <td class="excuse">"While I'm in this file, I'll clean up these other things."</td>
+          <td class="counter">Scope discipline: touch only what you're asked to touch. Open a new task for the cleanup.</td>
+          <td><code>/build</code></td>
+        </tr>
+        <tr>
+          <td class="excuse">"CI is green so it's ready to ship."</td>
+          <td class="counter">CI green is table stakes. Docs updated? Rollback documented? Breaking change communicated? Ship skill checks all of these.</td>
+          <td><code>/ship</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="caption">Add your own rows as you discover new rationalizations in your specific codebase. Each row is a ratchet click — a failure encoded into the skill permanently.</p>
+  </div>
+</div>
+
+<hr>
+
+<div class="section-label">How to Use Skills</div>
+<h2>Three ways to get started</h2>
+
+<p>You don't need to build all six skills at once. Start with the one phase where your agents most often take shortcuts. For most teams, that's either <code>/spec</code> (skipping requirements) or <code>/test</code> (shipping without tests).</p>
+
+<div style="display:grid;gap:12px;margin:20px 0;">
+  <div style="padding:16px;border-radius:8px;background:var(--surface);border:1.5px solid var(--border);">
+    <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#16A34A;margin-bottom:6px;">Option 1 · Claude Code marketplace</div>
+    <div style="font-size:14px;color:var(--text-muted);">Install Addy's skills directly from the Claude Code marketplace. Immediate access to all 6 SDLC skills, pre-tested and ready to use.</div>
+  </div>
+  <div style="padding:16px;border-radius:8px;background:var(--surface);border:1.5px solid var(--border);">
+    <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#16A34A;margin-bottom:6px;">Option 2 · Write your own markdown files</div>
+    <div style="font-size:14px;color:var(--text-muted);">Create <code>.claude/skills/</code> in your project. Add markdown files following the format above. Works with Claude Code, Cursor, and any tool that supports markdown skill injection.</div>
+  </div>
+  <div style="padding:16px;border-radius:8px;background:var(--surface);border:1.5px solid var(--border);">
+    <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#16A34A;margin-bottom:6px;">Option 3 · Adopt the patterns without tooling</div>
+    <div style="font-size:14px;color:var(--text-muted);">Even without any agent tooling, the SDLC workflow patterns are valuable checklists for human engineers. Start by adding the exit criteria to your PR template — the habit forms before the automation.</div>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>Key insight:</strong> Skills connect directly to the <a href="agent-harness-flue-explainer.html">ratchet principle from Part 1</a>. Every time your agent skips a step, add a rule to the relevant skill — or add a new row to the anti-rationalization table. Over time, your skills encode your team's entire institutional knowledge about how software should be built.
+</div>
+
+<div class="credits">
+  Source: <a href="https://addyosmani.com/blog/agent-skills/" target="_blank">Addy Osmani — Agent Skills (addyosmani.com)</a><br>
+  Series: <a href="agent-harness-flue-explainer.html">← Part 1: What is a Harness?</a> · <a href="long-running-agents-explainer.html">Part 3: Long-Running Agents →</a>
+</div>
+
+</main>
+
+<aside>
+  <div class="label">Key Terms</div>
+  <dl>
+    <dt>Skill</dt>
+    <dd>A markdown workflow file that injects structured steps into an agent's execution. Not documentation — an actionable process with exit criteria.</dd>
+    <dt>Exit criterion</dt>
+    <dd>Concrete evidence the agent must produce before a phase is complete. Not "I think it works" — "test output shows 0 failures."</dd>
+    <dt>Anti-rationalization table</dt>
+    <dd>Pre-written rebuttals to the excuses agents will generate for skipping steps. Anticipated and answered in the skill file itself.</dd>
+    <dt>Progressive disclosure</dt>
+    <dd>Loading only the skill relevant to the current SDLC phase. Keeps context lean and tells the agent clearly what phase it's in.</dd>
+    <dt>Scope discipline</dt>
+    <dd>"Touch only what you're asked to touch." The rule that prevents agents from turning small changes into unasked-for refactors.</dd>
+    <dt>SDLC</dt>
+    <dd>Software Development Lifecycle. The 6 phases: Define, Plan, Build, Verify, Review, Ship. Each maps to one skill.</dd>
+  </dl>
+</aside>
+
+</div>
+
+<script>
+// SHORTCUT DEMO
+const badSteps = [
+  {text:'Read the task: "add user auth"', icon:'📋', type:'done'},
+  {text:'Write auth code directly', icon:'⌨️', type:'done'},
+  {text:'~~Write a spec first~~', icon:'⚠️', type:'skipped'},
+  {text:'~~Write tests before code~~', icon:'⚠️', type:'skipped'},
+  {text:'Run: "looks good to me"', icon:'🤷', type:'done'},
+  {text:'~~Code review~~', icon:'⚠️', type:'skipped'},
+  {text:'Ship it ✓', icon:'🚀', type:'done'},
+];
+const goodSteps = [
+  {text:'/spec → write acceptance criteria to docs/spec.md', icon:'📋', type:'done'},
+  {text:'/plan → break into 4 vertical slices', icon:'🗂️', type:'done'},
+  {text:'/test → write failing tests first (TDD)', icon:'🧪', type:'done'},
+  {text:'/build → implement to make tests pass', icon:'⌨️', type:'done'},
+  {text:'/test → run suite: 12 passing, 0 failing', icon:'✅', type:'done'},
+  {text:'/review → spec criteria: 3/3 met, 1 edge case found & fixed', icon:'🔍', type:'done'},
+  {text:'/ship → CI green, docs updated, rollback documented', icon:'🚀', type:'done'},
+];
+
+function animateSteps(containerId, steps, delayMs) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  steps.forEach((s, i) => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 'sp-step ' + s.type;
+      div.innerHTML = `<span class="ss-icon">${s.icon}</span><span class="ss-text">${s.text}</span>`;
+      container.appendChild(div);
+    }, i * delayMs);
+  });
+}
+function runBad() { animateSteps('steps-bad', badSteps, 250); }
+function runGood() { animateSteps('steps-good', goodSteps, 400); }
+function runDemo() { runBad(); setTimeout(runGood, 200); }
+
+// SDLC TABS
+function showPhase(btn, id) {
+  document.querySelectorAll('.sdlc-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.sdlc-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>

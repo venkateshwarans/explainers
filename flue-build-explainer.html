@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building with Flue — an interactive explainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Figtree:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#FAF9F7; --surface:#FFFFFF; --demo-bg:#F3F2EE;
+      --text:#2D2D2D; --text-muted:#666666; --border:#E5E5E0;
+      --accent:#D97757; --accent-bg:#FDF0EB;
+      --good:#16A34A; --bad:#DC2626;
+      --font-serif:'Newsreader',Georgia,serif;
+      --font-sans:'Figtree',system-ui,sans-serif;
+      --font-mono:'Source Code Pro',ui-monospace,monospace;
+      --radius:12px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:17px;line-height:1.68;padding:0 0 120px;}
+    a{color:var(--accent);}
+    p{margin-bottom:15px;}
+    code{font-family:var(--font-mono);font-size:13px;background:var(--demo-bg);padding:1px 6px;border-radius:4px;}
+    pre code{background:none;padding:0;font-size:12.5px;}
+    strong{color:var(--text);}
+
+    /* SERIES NAV */
+    .series-nav{background:#1a1625;border-bottom:1px solid rgba(217,119,87,0.15);position:sticky;top:0;z-index:100;}
+    .sn-inner{max-width:1060px;margin:0 auto;display:flex;align-items:stretch;gap:0;padding:0 24px;overflow-x:auto;}
+    .sn-series-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(217,119,87,0.5);white-space:nowrap;padding:0 14px 0 0;margin-right:10px;display:flex;align-items:center;border-right:1px solid rgba(217,119,87,0.12);flex-shrink:0;}
+    .sn-steps{display:flex;align-items:stretch;gap:0;flex:1;}
+    .sn-step{text-decoration:none;padding:11px 12px;display:flex;align-items:center;gap:5px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.15s;}
+    .sn-step .sn-num{font-family:var(--font-mono);font-size:10px;color:rgba(253,240,235,0.25);}
+    .sn-step .sn-title{font-family:var(--font-sans);font-size:12px;color:rgba(253,240,235,0.4);}
+    .sn-step.done .sn-title{color:rgba(253,240,235,0.55);}
+    .sn-step.active{border-bottom-color:#D97757;}
+    .sn-step.active .sn-title{color:#D97757;font-weight:600;}
+    .sn-step:hover .sn-title{color:rgba(253,240,235,0.8);}
+    .sn-arrows{margin-left:auto;display:flex;align-items:center;gap:6px;padding:8px 0 8px 14px;flex-shrink:0;border-left:1px solid rgba(217,119,87,0.12);}
+    .sn-arrows a{font-family:var(--font-mono);font-size:11px;padding:4px 10px;border-radius:6px;text-decoration:none;color:rgba(253,240,235,0.5);border:1px solid rgba(217,119,87,0.2);transition:all 0.15s;white-space:nowrap;}
+    .sn-arrows a:hover{background:rgba(217,119,87,0.12);color:#D97757;border-color:rgba(217,119,87,0.4);}
+    .sn-arrows a.disabled{opacity:0.3;pointer-events:none;}
+
+    /* HERO */
+    .hero{background:linear-gradient(160deg,#1a0e04 0%,#110800 60%,#0a0500 100%);padding:64px 24px 72px;text-align:center;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,rgba(217,119,87,0.2) 0%,transparent 65%);}
+    .hero-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(217,119,87,0.7);margin-bottom:18px;position:relative;}
+    .hero h1{font-family:var(--font-serif);font-size:clamp(34px,5.5vw,58px);font-weight:700;letter-spacing:-0.02em;line-height:1.05;color:#FDF0EB;margin-bottom:18px;position:relative;}
+    .hero h1 em{color:#FB923C;font-style:normal;}
+    .hero .subtitle{font-size:17px;color:rgba(253,240,235,0.6);max-width:520px;margin:0 auto 28px;line-height:1.5;position:relative;}
+    .hero-badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;position:relative;}
+    .badge{font-family:var(--font-mono);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid rgba(217,119,87,0.3);color:rgba(253,240,235,0.55);background:rgba(217,119,87,0.08);}
+
+    /* LAYOUT */
+    .content{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:56px;align-items:start;padding:56px 24px 0;}
+    @media(max-width:880px){.content{grid-template-columns:1fr;}aside{display:none;}}
+
+    /* TYPE */
+    .section-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:52px;}
+    .section-label::before{content:'';flex:0 0 24px;height:1px;background:var(--accent);}
+    h2{font-family:var(--font-serif);font-size:clamp(22px,3vw,28px);font-weight:600;letter-spacing:-0.01em;line-height:1.2;margin-bottom:16px;}
+    .callout{border-left:3px solid var(--accent);background:var(--accent-bg);border-radius:0 var(--radius) var(--radius) 0;padding:14px 18px;margin:20px 0;font-size:15px;}
+    .callout strong{color:#9A3412;}
+
+    /* DEMOS */
+    .demo{border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);margin:28px 0;overflow:hidden;}
+    .demo-header{background:var(--demo-bg);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:10px;}
+    .demo-title{font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);flex:1;}
+    .demo-body{padding:24px;}
+    .caption{font-size:13px;color:var(--text-muted);margin-top:14px;line-height:1.5;font-style:italic;}
+
+    /* CODE TABS */
+    .code-tabs{border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:hidden;margin:24px 0;}
+    .ct-bar{display:flex;border-bottom:1px solid var(--border);background:var(--demo-bg);overflow-x:auto;}
+    .ct-tab{padding:9px 16px;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;appearance:none;transition:color 0.15s;}
+    .ct-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+    .ct-panel{display:none;margin:0;padding:18px 20px;font-family:var(--font-mono);font-size:12.5px;line-height:1.7;overflow-x:auto;background:#1E1E2E;color:#CDD6F4;}
+    .ct-panel.active{display:block;}
+    .ck{color:#89B4FA;} .cv{color:#A6E3A1;} .cs{color:#F9E2AF;} .cc{color:#6C7086;} .cf{color:#CBA6F7;} .cn{color:#F38BA8;}
+
+    /* FLOW DIAGRAM */
+    #flow-svg{width:100%;display:block;}
+    .flow-node{cursor:pointer;transition:filter 0.15s;}
+    .flow-node:hover{filter:brightness(1.15);}
+    #flow-detail{margin-top:14px;padding:14px 16px;border-radius:8px;background:var(--accent-bg);border:1.5px solid var(--accent);font-size:14px;min-height:52px;}
+    #flow-detail-title{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:4px;}
+
+    /* BUILD STEPS */
+    .build-steps{display:flex;flex-direction:column;gap:0;}
+    .build-step{display:flex;gap:0;align-items:stretch;position:relative;}
+    .build-step:not(:last-child)::after{content:'';position:absolute;left:19px;top:40px;width:2px;height:calc(100% - 10px);background:var(--border);}
+    .bs-num{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;font-weight:700;flex-shrink:0;z-index:1;background:var(--accent-bg);border:2px solid var(--accent);color:var(--accent);}
+    .bs-content{padding:6px 0 24px 16px;flex:1;}
+    .bs-title{font-weight:600;font-size:15px;font-family:var(--font-serif);margin-bottom:6px;}
+    .bs-desc{font-size:14px;color:var(--text-muted);line-height:1.55;}
+
+    /* DEPLOY BUILDER */
+    .deploy-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    @media(max-width:600px){.deploy-grid{grid-template-columns:1fr;}}
+    .deploy-option{padding:14px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;transition:all 0.15s;}
+    .deploy-option:hover{border-color:var(--accent);}
+    .deploy-option.selected{border-color:var(--accent);background:var(--accent-bg);}
+    .deploy-option .do-icon{font-size:24px;margin-bottom:8px;}
+    .deploy-option .do-title{font-weight:600;font-size:14px;margin-bottom:4px;}
+    .deploy-option .do-desc{font-size:12px;color:var(--text-muted);}
+    .deploy-option.selected .do-desc{color:var(--text);}
+    .deploy-output{background:#1E1E2E;border-radius:8px;padding:16px;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:#CDD6F4;margin-top:12px;min-height:100px;}
+
+    /* PROJECT IDEAS */
+    .ideas-grid{display:grid;gap:12px;margin:20px 0;}
+    .idea-card{padding:18px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--surface);display:flex;gap:14px;align-items:flex-start;}
+    .idea-card .ic-icon{font-size:28px;flex-shrink:0;}
+    .ic-title{font-family:var(--font-serif);font-size:16px;font-weight:600;margin-bottom:5px;}
+    .ic-body{font-size:13.5px;color:var(--text-muted);line-height:1.55;}
+    .ic-skills{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;}
+    .ic-tag{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:4px;background:var(--accent-bg);color:var(--accent);border:1px solid;}
+
+    /* TABLE */
+    table{border-collapse:collapse;width:100%;font-size:14px;margin:16px 0;}
+    th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);}
+    th{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);}
+    td.good{color:var(--good);}td.bad{color:var(--bad);}
+
+    aside{position:sticky;top:60px;align-self:start;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:18px 18px 8px;}
+    aside .label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
+    aside dl dt{font-family:var(--font-serif);font-size:15px;color:var(--text);margin-top:12px;}
+    aside dl dd{font-size:13px;color:var(--text-muted);margin:3px 0 10px;line-height:1.5;}
+
+    hr{border:none;border-top:1px solid var(--border);margin:48px 0;}
+    .credits{margin-top:60px;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:20px;}
+    .credits a{color:var(--text-muted);text-decoration:underline;}
+  </style>
+</head>
+<body>
+
+<nav class="series-nav">
+  <div class="sn-inner">
+    <div class="sn-series-label">Agent Engineering Series</div>
+    <div class="sn-steps">
+      <a href="agent-harness-flue-explainer.html" class="sn-step done"><span class="sn-num">1</span><span class="sn-title">What is a Harness?</span></a>
+      <a href="agent-skills-explainer.html" class="sn-step done"><span class="sn-num">2</span><span class="sn-title">Agent Skills</span></a>
+      <a href="long-running-agents-explainer.html" class="sn-step done"><span class="sn-num">3</span><span class="sn-title">Long-Running Agents</span></a>
+      <a href="flue-build-explainer.html" class="sn-step active"><span class="sn-num">4</span><span class="sn-title">Building with Flue</span></a>
+    </div>
+    <div class="sn-arrows">
+      <a href="long-running-agents-explainer.html">← Prev</a>
+      <a href="#" class="disabled">Next →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Series · Part 4 of 4 · Agent Engineering</div>
+  <h1>Building with Flue<br><em>Your First Agent Harness</em></h1>
+  <p class="subtitle">Everything from Parts 1–3 in one framework you own. Flue gives you skills, sessions, sandbox, and secrets as TypeScript primitives — no proprietary lock-in.</p>
+  <div class="hero-badges">
+    <span class="badge">series finale</span>
+    <span class="badge">real code</span>
+    <span class="badge">deploy anywhere</span>
+  </div>
+</div>
+
+<div class="content">
+<main>
+
+<div class="section-label">Why Flue</div>
+<h2>Everything you've learned — as code you own</h2>
+
+<p>Over the last three parts, you've learned that an agent is a model plus a harness, that skills enforce engineering discipline, and that long-running agents need persistent state and external verification. Flue is the framework that implements all of these ideas as structured TypeScript primitives.</p>
+
+<p>The core premise: the harness is the valuable part. So it should be yours — fully owned, fully customizable, not rented from a proprietary SDK. Flue gives you the runtime. You bring the domain logic.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0;">
+  <div style="padding:16px;border-radius:8px;background:#FEF2F2;border:1.5px solid #FECACA;">
+    <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--bad);margin-bottom:8px;">Other tools</div>
+    <div style="font-size:13.5px;color:var(--text);line-height:1.6;">Model + <em>their</em> harness. You configure what they allow. Hit a ceiling when your use case doesn't fit their assumptions.</div>
+  </div>
+  <div style="padding:16px;border-radius:8px;background:var(--accent-bg);border:1.5px solid var(--accent);">
+    <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);margin-bottom:8px;">Flue</div>
+    <div style="font-size:13.5px;color:var(--text);line-height:1.6;">Any model + <em>your</em> harness. You own every layer. Extend, fork, replace any component. No ceiling.</div>
+  </div>
+</div>
+
+<!-- DEMO 1: CODE ANATOMY -->
+<div class="section-label">Core Concepts in Code</div>
+<h2>What a Flue agent looks like</h2>
+
+<p>Flue agents are TypeScript files. The harness concepts from this series map directly to code primitives. Click each tab to see a different layer:</p>
+
+<div class="code-tabs">
+  <div class="ct-bar">
+    <button class="ct-tab active" onclick="showTab(this,'t-agent')">agents/review.ts</button>
+    <button class="ct-tab" onclick="showTab(this,'t-skill')">.agents/skills/review.md</button>
+    <button class="ct-tab" onclick="showTab(this,'t-session')">sessions + tasks</button>
+    <button class="ct-tab" onclick="showTab(this,'t-sandbox')">sandbox options</button>
+    <button class="ct-tab" onclick="showTab(this,'t-hooks')">MCP tools</button>
+  </div>
+  <pre class="ct-panel active" id="t-agent"><span class="cc">// .flue/agents/review.ts — a PR review agent</span>
+<span class="ck">import</span> { <span class="ck">type</span> <span class="cv">FlueContext</span> } <span class="ck">from</span> <span class="cs">'@flue/runtime'</span>;
+<span class="ck">import</span> { <span class="cv">local</span> } <span class="ck">from</span> <span class="cs">'@flue/runtime/node'</span>;
+<span class="ck">import</span> * <span class="ck">as</span> <span class="cv">v</span> <span class="ck">from</span> <span class="cs">'valibot'</span>;
+
+<span class="cc">// Declares how this agent can be triggered</span>
+<span class="ck">export const</span> <span class="cv">triggers</span> = { <span class="cn">webhook</span>: <span class="ck">true</span> };
+
+<span class="ck">export default async function</span>({ <span class="cn">init</span>, <span class="cn">payload</span>, <span class="cn">env</span> }: <span class="cv">FlueContext</span>) {
+  <span class="cc">// init() creates the harness — the control layer around the model</span>
+  <span class="cc">// local() gives the agent access to the host filesystem + shell</span>
+  <span class="ck">const</span> <span class="cn">harness</span> = <span class="ck">await</span> <span class="cf">init</span>({
+    <span class="cn">model</span>: <span class="cs">'anthropic/claude-sonnet-4-6'</span>,
+    <span class="cc">// Secrets stay in env — never exposed to model context</span>
+    <span class="cn">sandbox</span>: <span class="cf">local</span>({ <span class="cn">env</span>: { <span class="cn">GH_TOKEN</span>: env.<span class="cn">GH_TOKEN</span> } }),
+  });
+
+  <span class="cc">// session() manages memory + conversation history</span>
+  <span class="ck">const</span> <span class="cn">session</span> = <span class="ck">await</span> harness.<span class="cf">session</span>();
+
+  <span class="cc">// skill() invokes a named markdown workflow — see next tab</span>
+  <span class="ck">const</span> { <span class="cn">data</span> } = <span class="ck">await</span> session.<span class="cf">skill</span>(<span class="cs">'review'</span>, {
+    <span class="cn">args</span>: { <span class="cn">prNumber</span>: payload.<span class="cn">prNumber</span> },
+    <span class="cc">// Typed result validated with valibot schema</span>
+    <span class="cn">result</span>: v.<span class="cf">object</span>({
+      <span class="cn">verdict</span>: v.<span class="cf">picklist</span>([<span class="cs">'approve'</span>, <span class="cs">'request-changes'</span>]),
+      <span class="cn">summary</span>: v.<span class="cf">string</span>(),
+      <span class="cn">issues</span>: v.<span class="cf">array</span>(v.<span class="cf">string</span>()),
+    }),
+  });
+
+  <span class="ck">return</span> data;
+}</pre>
+  <pre class="ct-panel" id="t-skill"><span class="cc">---</span>
+<span class="cn">name</span>: <span class="cv">review</span>
+<span class="cn">description</span>: <span class="cs">Review a PR against the spec and team standards</span>
+<span class="cc">---</span>
+
+<span class="cf"># /review — Code Review Workflow</span>
+<span class="cc"># Saved to .agents/skills/review.md</span>
+
+<span class="cc">## Phase: Review</span>
+
+<span class="cc">## Steps</span>
+<span class="cv">1. Run: gh pr view {args.prNumber} --json files,body</span>
+<span class="cv">2. Read docs/spec.md if it exists</span>
+<span class="cv">3. Read each changed file in the PR diff</span>
+<span class="cv">4. Check each acceptance criterion from the spec</span>
+<span class="cv">5. Run the test suite and record results</span>
+<span class="cv">6. Populate the result schema with your verdict</span>
+
+<span class="cc">## Exit criteria</span>
+<span class="cn">✓ Every spec criterion marked approve or request-changes</span>
+<span class="cn">✓ Test output recorded in issues[] if failures exist</span>
+<span class="cn">✓ result.verdict is set based on findings</span>
+
+<span class="cc">## Do not skip because:</span>
+<span class="cc">- "Tests pass" → test coverage ≠ spec coverage</span>
+<span class="cc">- "Small change" → smallest changes cause biggest bugs</span></pre>
+  <pre class="ct-panel" id="t-session"><span class="cc">// Sessions — memory across runs, built into harness.session()</span>
+
+<span class="cc">// Same URL /{agent}/{id} continues the same session</span>
+<span class="ck">const</span> <span class="cn">session</span> = <span class="ck">await</span> harness.<span class="cf">session</span>();
+
+<span class="cc">// Named sessions — multiple threads inside one agent instance</span>
+<span class="ck">const</span> <span class="cn">review</span> = <span class="ck">await</span> harness.<span class="cf">session</span>(<span class="cs">'review-thread'</span>);
+<span class="ck">const</span> <span class="cn">research</span> = <span class="ck">await</span> harness.<span class="cf">session</span>(<span class="cs">'research-thread'</span>);
+
+<span class="cc">// session.task() — a focused subagent in a detached session</span>
+<span class="cc">// Shares the same sandbox/filesystem but gets fresh message history</span>
+<span class="ck">const</span> <span class="cn">findings</span> = <span class="ck">await</span> session.<span class="cf">task</span>(
+  <span class="cs">'Research the auth flow and list the key files.'</span>,
+  { <span class="cn">cwd</span>: <span class="cs">'/workspace/project'</span>, <span class="cn">role</span>: <span class="cs">'researcher'</span> }
+);
+
+<span class="cc">// Use the subagent's findings in the main session</span>
+<span class="ck">await</span> session.<span class="cf">prompt</span>(
+  <span class="cs">`Draft an implementation plan using:\n\n${findings.text}`</span>
+);
+
+<span class="cc">// On Cloudflare: session data backed by Durable Objects</span>
+<span class="cc">// On Node.js: in-memory by default, provide custom store for persistence</span></pre>
+  <pre class="ct-panel" id="t-sandbox"><span class="cc">// Three sandbox options — no custom config needed for most cases</span>
+
+<span class="cc">// 1. Virtual sandbox (default) — fast, no container</span>
+<span class="cc">//    Powered by just-bash, ideal for high-traffic agents</span>
+<span class="ck">const</span> <span class="cn">harness</span> = <span class="ck">await</span> <span class="cf">init</span>({ <span class="cn">model</span>: <span class="cs">'anthropic/claude-sonnet-4-6'</span> });
+
+<span class="cc">// 2. Local sandbox — full host filesystem + shell (Node.js only)</span>
+<span class="cc">//    Use in CI runners where isolation comes from the runner itself</span>
+<span class="ck">import</span> { <span class="cv">local</span> } <span class="ck">from</span> <span class="cs">'@flue/runtime/node'</span>;
+<span class="ck">const</span> <span class="cn">harness</span> = <span class="ck">await</span> <span class="cf">init</span>({
+  <span class="cn">sandbox</span>: <span class="cf">local</span>({
+    <span class="cc">// Explicit env allowlist — only these vars reach the model</span>
+    <span class="cn">env</span>: { <span class="cn">GH_TOKEN</span>: process.env.<span class="cn">GH_TOKEN</span> },
+  }),
+  <span class="cn">model</span>: <span class="cs">'anthropic/claude-opus-4-7'</span>,
+});
+
+<span class="cc">// 3. Remote sandbox (Daytona) — full Linux container</span>
+<span class="cc">//    For coding agents that need git, Node.js, a browser</span>
+<span class="cc">//    Install with: flue add daytona | claude</span>
+<span class="ck">import</span> { <span class="cv">daytona</span> } <span class="ck">from</span> <span class="cs">'../connectors/daytona'</span>;
+<span class="ck">const</span> <span class="cn">sandbox</span> = <span class="ck">await</span> client.<span class="cf">create</span>();
+<span class="ck">const</span> <span class="cn">harness</span> = <span class="ck">await</span> <span class="cf">init</span>({ <span class="cn">sandbox</span>: <span class="cf">daytona</span>(sandbox) });</pre>
+  <pre class="ct-panel" id="t-hooks"><span class="cc">// MCP tools — connect external services without leaking secrets</span>
+<span class="ck">import</span> { <span class="cv">connectMcpServer</span>, <span class="ck">type</span> <span class="cv">FlueContext</span> } <span class="ck">from</span> <span class="cs">'@flue/runtime'</span>;
+
+<span class="ck">export const</span> <span class="cv">triggers</span> = { <span class="cn">webhook</span>: <span class="ck">true</span> };
+
+<span class="ck">export default async function</span>({ <span class="cn">init</span>, <span class="cn">payload</span>, <span class="cn">env</span> }: <span class="cv">FlueContext</span>) {
+  <span class="cc">// Secret stays in env — model never sees the token</span>
+  <span class="ck">const</span> <span class="cn">github</span> = <span class="ck">await</span> <span class="cf">connectMcpServer</span>(<span class="cs">'github'</span>, {
+    <span class="cn">url</span>: <span class="cs">'https://mcp.github.com/mcp'</span>,
+    <span class="cn">headers</span>: { <span class="cn">Authorization</span>: <span class="cs">`Bearer ${env.GITHUB_TOKEN}`</span> },
+  });
+
+  <span class="ck">try</span> {
+    <span class="ck">const</span> <span class="cn">harness</span> = <span class="ck">await</span> <span class="cf">init</span>({
+      <span class="cn">model</span>: <span class="cs">'anthropic/claude-sonnet-4-6'</span>,
+      <span class="cc">// Pass MCP tools to the harness</span>
+      <span class="cn">tools</span>: github.<span class="cn">tools</span>,
+    });
+    <span class="ck">const</span> <span class="cn">session</span> = <span class="ck">await</span> harness.<span class="cf">session</span>();
+    <span class="ck">return await</span> session.<span class="cf">prompt</span>(payload.<span class="cn">prompt</span>);
+  } <span class="ck">finally</span> {
+    <span class="ck">await</span> github.<span class="cf">close</span>();
+  }
+}</pre>
+</div>
+
+<!-- DEMO 2: REQUEST FLOW -->
+<div class="section-label">How it Works</div>
+<h2>How a request flows through Flue</h2>
+
+<p>When a user sends a message to your Flue agent, it passes through every layer of the harness before the model ever sees it — and again on the way out. Click each node to understand what that layer does:</p>
+
+<div class="demo">
+  <div class="demo-header"><div class="demo-title">Demo · Request Flow — click a node</div></div>
+  <div class="demo-body">
+    <svg id="flow-svg" viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg">
+      <!-- Arrow helper -->
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#9CA3AF"/>
+        </marker>
+      </defs>
+
+      <!-- User -->
+      <g class="flow-node" onclick="flowDetail('user')">
+        <rect x="10" y="100" width="80" height="60" rx="8" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1.5"/>
+        <text x="50" y="127" text-anchor="middle" font-family="Figtree,sans-serif" font-size="11" fill="#374151" font-weight="600">User</text>
+        <text x="50" y="142" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="9" fill="#9CA3AF">message</text>
+      </g>
+      <line x1="90" y1="130" x2="118" y2="130" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Trigger -->
+      <g class="flow-node" onclick="flowDetail('trigger')">
+        <rect x="120" y="100" width="80" height="60" rx="8" fill="#FFF7ED" stroke="#FED7AA" stroke-width="1.5"/>
+        <text x="160" y="127" text-anchor="middle" font-family="Figtree,sans-serif" font-size="11" fill="#9A3412" font-weight="600">Trigger</text>
+        <text x="160" y="142" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="9" fill="#C2410C">webhook/CLI</text>
+      </g>
+      <line x1="200" y1="130" x2="228" y2="130" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Harness -->
+      <g class="flow-node" onclick="flowDetail('harness')">
+        <rect x="230" y="80" width="90" height="100" rx="8" fill="#FDF0EB" stroke="#D97757" stroke-width="2"/>
+        <text x="275" y="117" text-anchor="middle" font-family="Figtree,sans-serif" font-size="11" fill="#9A3412" font-weight="700">Harness</text>
+        <text x="275" y="132" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="8.5" fill="#C2410C">skills</text>
+        <text x="275" y="144" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="8.5" fill="#C2410C">session</text>
+        <text x="275" y="156" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="8.5" fill="#C2410C">hooks</text>
+      </g>
+      <line x1="320" y1="130" x2="348" y2="130" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Sandbox -->
+      <g class="flow-node" onclick="flowDetail('sandbox')">
+        <rect x="350" y="100" width="80" height="60" rx="8" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="1.5"/>
+        <text x="390" y="127" text-anchor="middle" font-family="Figtree,sans-serif" font-size="11" fill="#065F46" font-weight="600">Sandbox</text>
+        <text x="390" y="142" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="9" fill="#047857">exec + guard</text>
+      </g>
+      <line x1="430" y1="130" x2="458" y2="130" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Model -->
+      <g class="flow-node" onclick="flowDetail('model')">
+        <rect x="460" y="100" width="80" height="60" rx="8" fill="#D97757" stroke="#C05E3D" stroke-width="1.5"/>
+        <text x="500" y="127" text-anchor="middle" font-family="Figtree,sans-serif" font-size="11" fill="white" font-weight="600">Model</text>
+        <text x="500" y="142" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="9" fill="rgba(255,255,255,0.75)">Claude</text>
+      </g>
+      <!-- Filesystem -->
+      <g class="flow-node" onclick="flowDetail('fs')">
+        <rect x="560" y="100" width="68" height="60" rx="8" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1.5"/>
+        <text x="594" y="127" text-anchor="middle" font-family="Figtree,sans-serif" font-size="11" fill="#3730A3" font-weight="600">Files</text>
+        <text x="594" y="142" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="9" fill="#4338CA">read/write</text>
+      </g>
+      <line x1="540" y1="130" x2="558" y2="130" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Return arrow -->
+      <path d="M 500 160 Q 500 210 275 210 Q 165 210 165 165" stroke="#D97757" stroke-width="1.5" fill="none" stroke-dasharray="5,4" marker-end="url(#arr)"/>
+      <text x="340" y="225" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="9" fill="#D97757">response + session update</text>
+    </svg>
+    <div id="flow-detail">
+      <div id="flow-detail-title">Click a node</div>
+      <div id="flow-detail-body" style="font-size:13px;color:var(--text-muted);">Each box is a layer of your Flue harness. The model sits in the middle — surrounded by layers that give it context, capabilities, and constraints.</div>
+    </div>
+    <p class="caption">The model only sees what the harness assembles for it. Your system prompt, active skills, session context, and secrets are all injected by the harness — not by the user's message.</p>
+  </div>
+</div>
+
+<!-- SECTION 3: BUILD STEPS -->
+<div class="section-label">Getting Started</div>
+<h2>Your first Flue agent in 5 steps</h2>
+
+<div class="build-steps">
+  <div class="build-step">
+    <div class="bs-num">1</div>
+    <div class="bs-content">
+      <div class="bs-title">Install Flue</div>
+      <div class="bs-desc">
+        <code>bun add flue</code> (or <code>npm install flue</code>). Flue is TypeScript-first — no separate type package needed.
+      </div>
+    </div>
+  </div>
+  <div class="build-step">
+    <div class="bs-num">2</div>
+    <div class="bs-content">
+      <div class="bs-title">Create your AGENTS.md</div>
+      <div class="bs-desc">Start with your package manager, which directories are off-limits, and your team's critical conventions. 10 lines is a good first file. Every line should be earnable — add rules only when something goes wrong.</div>
+    </div>
+  </div>
+  <div class="build-step">
+    <div class="bs-num">3</div>
+    <div class="bs-content">
+      <div class="bs-title">Define your first skill</div>
+      <div class="bs-desc">Create <code>.flue/skills/</code> and write one markdown workflow file. Start with the phase where your agent most often takes shortcuts — usually <code>/spec</code> or <code>/test</code>.</div>
+    </div>
+  </div>
+  <div class="build-step">
+    <div class="bs-num">4</div>
+    <div class="bs-content">
+      <div class="bs-title">Configure sandbox + secrets</div>
+      <div class="bs-desc">Define which commands are allowed. Move API keys out of your prompt and into the sandbox secrets layer. Even if the model makes a mistake, secrets stay hidden.</div>
+    </div>
+  </div>
+  <div class="build-step">
+    <div class="bs-num">5</div>
+    <div class="bs-content">
+      <div class="bs-title">Deploy and observe</div>
+      <div class="bs-desc">Use Flue's CLI (<code>flue serve</code>) for HTTP or <code>flue run</code> for CLI. Watch the session log. Every mistake the agent makes is your next AGENTS.md rule.</div>
+    </div>
+  </div>
+</div>
+
+<!-- DEMO 3: DEPLOY BUILDER -->
+<div class="section-label">Deployment</div>
+<h2>Where do you want to run your agent?</h2>
+
+<p>Flue agents are just TypeScript — they run anywhere. Pick your deployment target and see the config:</p>
+
+<div class="demo">
+  <div class="demo-header"><div class="demo-title">Demo · Deployment Config Builder</div></div>
+  <div class="demo-body">
+    <div class="deploy-grid">
+      <div class="deploy-option selected" id="d-node" onclick="selectDeploy('node')">
+        <div class="do-icon">⚡</div>
+        <div class="do-title">Node.js / Bun server</div>
+        <div class="do-desc">HTTP server for web apps or APIs</div>
+      </div>
+      <div class="deploy-option" id="d-cf" onclick="selectDeploy('cf')">
+        <div class="do-icon">☁️</div>
+        <div class="do-title">Cloudflare Workers</div>
+        <div class="do-desc">Edge deployment, global latency</div>
+      </div>
+      <div class="deploy-option" id="d-gh" onclick="selectDeploy('gh')">
+        <div class="do-icon">🔄</div>
+        <div class="do-title">GitHub Actions</div>
+        <div class="do-desc">Triggered by PR events</div>
+      </div>
+      <div class="deploy-option" id="d-cli" onclick="selectDeploy('cli')">
+        <div class="do-icon">🖥️</div>
+        <div class="do-title">CLI / local</div>
+        <div class="do-desc">Run from terminal, development use</div>
+      </div>
+    </div>
+    <div class="deploy-output" id="deploy-output"><span style="color:#6C7086;"># bun run agent.ts → starts HTTP server on port 3000</span>
+<span style="color:#89B4FA;">import</span> { agent } <span style="color:#89B4FA;">from</span> <span style="color:#A6E3A1;">'./agent'</span>;
+<span style="color:#89B4FA;">import</span> { serve } <span style="color:#89B4FA;">from</span> <span style="color:#A6E3A1;">'flue/server'</span>;
+
+serve(agent, { port: <span style="color:#F9E2AF;">3000</span> });</div>
+    <p class="caption">Flue separates the agent definition from its deployment target — the same agent.ts runs on any of these platforms without changes to your core logic.</p>
+  </div>
+</div>
+
+<hr>
+
+<!-- SECTION 5: PROJECT IDEAS -->
+<div class="section-label">What to Build</div>
+<h2>Three projects to cement your understanding</h2>
+
+<div class="ideas-grid">
+  <div class="idea-card">
+    <div class="ic-icon">🔍</div>
+    <div>
+      <div class="ic-title">PR Review Agent</div>
+      <div class="ic-body">An agent triggered by GitHub webhooks that reviews PRs against your codebase's standards. Uses the <code>/review</code> skill from Part 2. Runs in a sandbox that can read your repo. Posts GitHub comments as output.</div>
+      <div class="ic-skills">
+        <span class="ic-tag">trigger: webhook</span>
+        <span class="ic-tag">skill: /review</span>
+        <span class="ic-tag">deploy: GitHub Actions</span>
+      </div>
+    </div>
+  </div>
+  <div class="idea-card">
+    <div class="ic-icon">🐛</div>
+    <div>
+      <div class="ic-title">Issue Triage Agent</div>
+      <div class="ic-body">An ambient agent that runs on a schedule, reads new GitHub issues, labels them by category, and assigns them to the right person. Teaches you session persistence (tracks which issues were already triaged) and ambient processing from Part 3.</div>
+      <div class="ic-skills">
+        <span class="ic-tag">trigger: cron</span>
+        <span class="ic-tag">pattern: ambient</span>
+        <span class="ic-tag">deploy: Cloud Run</span>
+      </div>
+    </div>
+  </div>
+  <div class="idea-card">
+    <div class="ic-icon">🧪</div>
+    <div>
+      <div class="ic-title">Multi-hour Coding Agent</div>
+      <div class="ic-body">An agent that takes a GitHub issue and implements the full feature end-to-end: spec → plan → build → test → PR. Applies every concept from this series. Uses the Ralph loop (Part 3) with all 6 SDLC skills (Part 2) wired together.</div>
+      <div class="ic-skills">
+        <span class="ic-tag">pattern: Ralph loop</span>
+        <span class="ic-tag">all 6 skills</span>
+        <span class="ic-tag">session: checkpoint-resume</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>Series complete.</strong> You've covered what a harness is, how skills enforce discipline, how long-running agents work, and now how Flue packages it all. The next step is building something. Start small — a PR review agent is 50 lines of Flue code and teaches every concept in the series.
+</div>
+
+<table>
+  <thead>
+    <tr><th>Series part</th><th>Core concept</th><th>Now you can...</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="agent-harness-flue-explainer.html">Part 1 · Harness</a></td>
+      <td>Agent = Model + Harness</td>
+      <td>Explain why the harness matters more than the model</td>
+    </tr>
+    <tr>
+      <td><a href="agent-skills-explainer.html">Part 2 · Skills</a></td>
+      <td>Workflows enforce discipline</td>
+      <td>Write skills that prevent agents from taking shortcuts</td>
+    </tr>
+    <tr>
+      <td><a href="long-running-agents-explainer.html">Part 3 · Long-running</a></td>
+      <td>State lives outside context</td>
+      <td>Build agents that run for hours without losing state</td>
+    </tr>
+    <tr>
+      <td><strong>Part 4 · Flue</strong></td>
+      <td>Own your harness</td>
+      <td>Deploy a production agent with skills, sessions, and a sandbox</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="credits">
+  Sources: <a href="https://flueframework.com" target="_blank">Flue Framework</a> · <a href="https://x.com/addyosmani/status/2053231239721885918" target="_blank">Addy Osmani — Agent Harness Engineering (X)</a><br>
+  Series: <a href="agent-harness-flue-explainer.html">Part 1</a> · <a href="agent-skills-explainer.html">Part 2</a> · <a href="long-running-agents-explainer.html">Part 3</a> · Part 4 ← you are here
+</div>
+</main>
+
+<aside>
+  <div class="label">Flue Primitives</div>
+  <dl>
+    <dt>createAgent()</dt>
+    <dd>The top-level function. Takes model, systemPrompt, skills, sandbox, and session. Returns a deployable agent.</dd>
+    <dt>createSkills()</dt>
+    <dd>Loads markdown skill files from a directory. Each file maps to a slash command the agent can invoke.</dd>
+    <dt>createSession()</dt>
+    <dd>Sets up persistent state across runs. Configures what survives context resets and where it's stored.</dd>
+    <dt>createSandbox()</dt>
+    <dd>Configures the execution environment: allowed commands, network policy, and secrets injection.</dd>
+    <dt>createHooks()</dt>
+    <dd>Lifecycle enforcement: preToolUse, postEdit, preCommit. Blocks destructive actions structurally.</dd>
+    <dt>flue serve</dt>
+    <dd>Deploy as an HTTP server. One command — your agent becomes an API endpoint.</dd>
+    <dt>flue run</dt>
+    <dd>Run from CLI. For development, local scripts, and one-shot tasks.</dd>
+  </dl>
+  <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+    <div class="label">The Series</div>
+    <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;">
+      <a href="agent-harness-flue-explainer.html" style="color:var(--good);">✓ Part 1: What is a Harness?</a>
+      <a href="agent-skills-explainer.html" style="color:var(--good);">✓ Part 2: Agent Skills</a>
+      <a href="long-running-agents-explainer.html" style="color:var(--good);">✓ Part 3: Long-Running Agents</a>
+      <span style="color:var(--accent);font-weight:600;">● Part 4: Building with Flue</span>
+    </div>
+  </div>
+</aside>
+</div>
+
+<script>
+function showTab(btn, id) {
+  document.querySelectorAll('.ct-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.ct-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+const flowNodes = {
+  user: { title: 'User Message', body: 'The user\'s raw message. Before it reaches the model, it passes through the trigger, harness, and sandbox layers — each one adding context or constraints.' },
+  trigger: { title: 'Trigger Layer', body: 'Receives the message from a webhook, CLI, or cron schedule. Triggers are first-class in Flue — the same agent logic runs on any trigger type without code changes.' },
+  harness: { title: 'Harness Layer', body: 'The most important layer. Assembles the full prompt: AGENTS.md rules, the active skill for the current phase, and the session context. The model sees a focused, structured prompt — not a raw user message.' },
+  sandbox: { title: 'Sandbox Layer', body: 'Wraps every tool call. Enforces which commands can run, blocks network calls to unauthorized domains, and injects secrets without exposing them to the model. Safety is structural here.' },
+  model: { title: 'AI Model', body: 'Claude (or any model you configure) handles the actual reasoning and generation. It sees the assembled prompt from the harness and responds with text and tool calls. It never sees raw secrets or unfiltered input.' },
+  fs: { title: 'Filesystem', body: 'Where agents read context (code, docs, specs) and write results (edited files, session logs, progress tracking). Durable state lives here, not in the model\'s context window.' },
+};
+function flowDetail(node) {
+  const n = flowNodes[node];
+  document.getElementById('flow-detail-title').textContent = n.title;
+  document.getElementById('flow-detail-body').textContent = n.body;
+  document.getElementById('flow-detail').style.borderColor = 'var(--accent)';
+}
+
+const deployConfigs = {
+  node: `<span style="color:#6C7086;"># Build for Node.js, then run as an HTTP server</span>
+$ <span style="color:#A6E3A1;">flue build --target node</span>
+<span style="color:#6C7086;"># → outputs ./dist/server.mjs</span>
+
+<span style="color:#6C7086;"># Development: hot reload on file changes (port 3583)</span>
+$ <span style="color:#A6E3A1;">flue dev --target node --env .env</span>
+
+<span style="color:#6C7086;"># Invoke via HTTP</span>
+$ curl http://localhost:3583/agents/review/my-session \\
+    -d '{"prNumber": 42}'`,
+  cf: `<span style="color:#6C7086;"># Build for Cloudflare Workers + Durable Objects</span>
+$ <span style="color:#A6E3A1;">flue build --target cloudflare</span>
+$ <span style="color:#A6E3A1;">wrangler deploy</span>
+
+<span style="color:#6C7086;"># Dev with wrangler (peer dep required)</span>
+$ <span style="color:#A6E3A1;">flue dev --target cloudflare --env .env</span>
+
+<span style="color:#6C7086;"># Sessions auto-persisted via Durable Objects</span>
+<span style="color:#6C7086;"># Same URL = same session, days or weeks later</span>`,
+  gh: `<span style="color:#6C7086;"># .github/workflows/review.yml</span>
+<span style="color:#F9E2AF;">on</span>:
+  pull_request: { types: [opened, synchronize] }
+<span style="color:#F9E2AF;">jobs</span>:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bun install
+      - run: <span style="color:#A6E3A1;">flue run review --payload '{"prNumber":${{ github.event.pull_request.number }}'</span>
+        env:
+          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}`,
+  cli: `<span style="color:#6C7086;"># Run any agent from the CLI — perfect for CI or one-shot tasks</span>
+$ <span style="color:#A6E3A1;">flue run review --target node --id test-1 \\
+    --payload '{"prNumber": 42}'</span>
+
+<span style="color:#6C7086;"># Watch mode during development</span>
+$ <span style="color:#A6E3A1;">flue dev --target node</span>
+
+<span style="color:#6C7086;"># Add a sandbox connector (Daytona, E2B, etc.)</span>
+$ <span style="color:#A6E3A1;">flue add daytona | claude</span>`,
+};
+
+function selectDeploy(key) {
+  document.querySelectorAll('.deploy-option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('d-' + key).classList.add('selected');
+  document.getElementById('deploy-output').innerHTML = deployConfigs[key];
+}
+</script>
+</body>
+</html>

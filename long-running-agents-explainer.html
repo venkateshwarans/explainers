@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Long-Running Agents — an interactive explainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Figtree:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#FAF9F7; --surface:#FFFFFF; --demo-bg:#F3F2EE;
+      --text:#2D2D2D; --text-muted:#666666; --border:#E5E5E0;
+      --accent:#6366F1; --accent-bg:#EEF2FF;
+      --good:#16A34A; --bad:#DC2626; --warn:#D97706;
+      --font-serif:'Newsreader',Georgia,serif;
+      --font-sans:'Figtree',system-ui,sans-serif;
+      --font-mono:'Source Code Pro',ui-monospace,monospace;
+      --radius:12px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:17px;line-height:1.68;padding:0 0 120px;}
+    a{color:var(--accent);}
+    p{margin-bottom:15px;}
+    code{font-family:var(--font-mono);font-size:13px;background:var(--demo-bg);padding:1px 6px;border-radius:4px;}
+    strong{color:var(--text);}
+
+    /* SERIES NAV */
+    .series-nav{background:#1a1625;border-bottom:1px solid rgba(217,119,87,0.15);position:sticky;top:0;z-index:100;}
+    .sn-inner{max-width:1060px;margin:0 auto;display:flex;align-items:stretch;gap:0;padding:0 24px;overflow-x:auto;}
+    .sn-series-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(217,119,87,0.5);white-space:nowrap;padding:0 14px 0 0;margin-right:10px;display:flex;align-items:center;border-right:1px solid rgba(217,119,87,0.12);flex-shrink:0;}
+    .sn-steps{display:flex;align-items:stretch;gap:0;flex:1;}
+    .sn-step{text-decoration:none;padding:11px 12px;display:flex;align-items:center;gap:5px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.15s;}
+    .sn-step .sn-num{font-family:var(--font-mono);font-size:10px;color:rgba(253,240,235,0.25);}
+    .sn-step .sn-title{font-family:var(--font-sans);font-size:12px;color:rgba(253,240,235,0.4);}
+    .sn-step.done .sn-title{color:rgba(253,240,235,0.55);}
+    .sn-step.active{border-bottom-color:#6366F1;}
+    .sn-step.active .sn-title{color:#818CF8;font-weight:600;}
+    .sn-step:hover .sn-title{color:rgba(253,240,235,0.8);}
+    .sn-arrows{margin-left:auto;display:flex;align-items:center;gap:6px;padding:8px 0 8px 14px;flex-shrink:0;border-left:1px solid rgba(217,119,87,0.12);}
+    .sn-arrows a{font-family:var(--font-mono);font-size:11px;padding:4px 10px;border-radius:6px;text-decoration:none;color:rgba(253,240,235,0.5);border:1px solid rgba(217,119,87,0.2);transition:all 0.15s;white-space:nowrap;}
+    .sn-arrows a:hover{background:rgba(99,102,241,0.15);color:#818CF8;border-color:rgba(99,102,241,0.4);}
+    .sn-arrows a.disabled{opacity:0.3;pointer-events:none;}
+
+    /* HERO */
+    .hero{background:linear-gradient(160deg,#0a0a1a 0%,#06060f 60%,#030308 100%);padding:64px 24px 72px;text-align:center;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,rgba(99,102,241,0.18) 0%,transparent 65%);}
+    .hero-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(99,102,241,0.7);margin-bottom:18px;position:relative;}
+    .hero h1{font-family:var(--font-serif);font-size:clamp(34px,5.5vw,58px);font-weight:700;letter-spacing:-0.02em;line-height:1.05;color:#EEF2FF;margin-bottom:18px;position:relative;}
+    .hero h1 em{color:#818CF8;font-style:normal;}
+    .hero .subtitle{font-size:17px;color:rgba(238,242,255,0.6);max-width:520px;margin:0 auto 28px;line-height:1.5;position:relative;}
+    .hero-badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;position:relative;}
+    .badge{font-family:var(--font-mono);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid rgba(99,102,241,0.3);color:rgba(238,242,255,0.55);background:rgba(99,102,241,0.08);}
+
+    /* LAYOUT */
+    .content{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:56px;align-items:start;padding:56px 24px 0;}
+    @media(max-width:880px){.content{grid-template-columns:1fr;}aside{display:none;}}
+
+    /* TYPE */
+    .section-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#6366F1;display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:52px;}
+    .section-label::before{content:'';flex:0 0 24px;height:1px;background:#6366F1;}
+    h2{font-family:var(--font-serif);font-size:clamp(22px,3vw,28px);font-weight:600;letter-spacing:-0.01em;line-height:1.2;margin-bottom:16px;}
+    .callout{border-left:3px solid #6366F1;background:var(--accent-bg);border-radius:0 var(--radius) var(--radius) 0;padding:14px 18px;margin:20px 0;font-size:15px;}
+    .callout strong{color:#4338CA;}
+    .quote-block{border-left:3px solid var(--accent);padding:8px 0 8px 20px;margin:20px 0;font-family:var(--font-serif);font-size:17px;font-style:italic;color:var(--text);}
+    .quote-block cite{display:block;margin-top:6px;font-size:13px;font-style:normal;font-family:var(--font-mono);color:var(--text-muted);}
+
+    /* DEMOS */
+    .demo{border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);margin:28px 0;overflow:hidden;}
+    .demo-header{background:var(--demo-bg);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:10px;}
+    .demo-title{font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);flex:1;}
+    .demo-body{padding:24px;}
+    .caption{font-size:13px;color:var(--text-muted);margin-top:14px;line-height:1.5;font-style:italic;}
+
+    /* CONTEXT ROT DEMO */
+    #ctx-canvas{width:100%;height:200px;display:block;border-radius:8px;background:#1E1E2E;}
+    .ctx-controls{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+    .ctx-btn{font-family:var(--font-mono);font-size:12px;padding:6px 14px;border-radius:6px;border:1.5px solid var(--border);background:var(--demo-bg);cursor:pointer;transition:all 0.15s;}
+    .ctx-btn:hover{background:var(--border);}
+    .ctx-btn.primary{background:#6366F1;color:white;border-color:#6366F1;}
+    .ctx-metric{font-family:var(--font-mono);font-size:12px;padding:6px 12px;background:var(--demo-bg);border-radius:6px;color:var(--text-muted);}
+    .ctx-metric span{color:var(--text);font-weight:600;}
+
+    /* THREE TYPES */
+    .type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0;}
+    @media(max-width:600px){.type-grid{grid-template-columns:1fr;}}
+    .type-card{border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:16px;cursor:pointer;transition:all 0.15s;}
+    .type-card:hover{border-color:var(--accent);}
+    .type-card.active{border-color:var(--accent);background:var(--accent-bg);}
+    .type-card .tc-icon{font-size:28px;margin-bottom:8px;}
+    .type-card .tc-title{font-family:var(--font-serif);font-size:16px;font-weight:600;margin-bottom:6px;}
+    .type-card .tc-desc{font-size:13px;color:var(--text-muted);line-height:1.5;}
+    .type-card.active .tc-desc{color:var(--text);}
+    .type-detail{margin-top:12px;padding:14px 16px;border-radius:8px;background:var(--accent-bg);border:1.5px solid var(--accent);font-size:14px;min-height:60px;display:none;}
+    .type-detail.visible{display:block;}
+
+    /* RALPH LOOP */
+    .ralph-steps{display:grid;gap:0;}
+    .ralph-step{display:flex;gap:0;align-items:stretch;position:relative;}
+    .ralph-step:not(:last-child)::after{content:'';position:absolute;left:19px;top:38px;width:2px;height:calc(100% - 10px);background:var(--border);z-index:0;}
+    .rs-dot{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;z-index:1;border:2px solid var(--border);background:var(--surface);transition:all 0.3s;}
+    .ralph-step.active .rs-dot{border-color:#6366F1;background:#6366F1;color:white;}
+    .ralph-step.done .rs-dot{border-color:var(--good);background:#F0FDF4;}
+    .rs-content{padding:8px 0 20px 14px;flex:1;}
+    .rs-title{font-weight:600;font-size:14px;margin-bottom:3px;}
+    .rs-desc{font-size:13px;color:var(--text-muted);line-height:1.5;}
+    .ralph-step.active .rs-title{color:#4338CA;}
+    .ralph-controls{display:flex;gap:8px;margin-top:12px;}
+    .ralph-controls button{font-family:var(--font-mono);font-size:12px;padding:7px 14px;border-radius:6px;border:1.5px solid var(--border);background:var(--demo-bg);cursor:pointer;}
+    .ralph-controls button:hover{background:var(--border);}
+    .ralph-controls .rp{background:#6366F1;color:white;border-color:#6366F1;}
+    .ralph-controls .rp:hover{opacity:0.85;}
+    #loop-count{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);padding:0 8px;display:flex;align-items:center;}
+
+    /* ARCHITECTURE DIAGRAM */
+    .arch-compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    @media(max-width:580px){.arch-compare{grid-template-columns:1fr;}}
+    .arch-box{border-radius:var(--radius);overflow:hidden;border:1.5px solid var(--border);}
+    .arch-header{padding:10px 14px;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border);}
+    .arch-header.bare{background:#FEF2F2;color:var(--bad);}
+    .arch-header.lra{background:#EEF2FF;color:#4338CA;}
+    .arch-layers{padding:14px;display:flex;flex-direction:column;gap:8px;min-height:240px;}
+    .arch-layer{padding:10px 12px;border-radius:8px;font-size:13px;font-family:var(--font-mono);}
+    .arch-layer.model{background:#6366F1;color:white;text-align:center;}
+    .arch-layer.brain{background:#EEF2FF;border:1px solid #C7D2FE;color:#3730A3;}
+    .arch-layer.hands{background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;}
+    .arch-layer.session{background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;}
+    .arch-layer.missing{background:#F9FAFB;border:1px dashed #D1D5DB;color:#9CA3AF;text-align:center;font-style:italic;}
+
+    /* PATTERNS GRID */
+    .patterns-grid{display:grid;gap:12px;margin:20px 0;}
+    .pattern-card{padding:16px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);}
+    .pattern-card .p-label{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#6366F1;margin-bottom:6px;}
+    .pattern-card .p-title{font-family:var(--font-serif);font-size:16px;font-weight:600;margin-bottom:6px;}
+    .pattern-card .p-body{font-size:13.5px;color:var(--text-muted);line-height:1.55;}
+
+    /* TABLE */
+    table{border-collapse:collapse;width:100%;font-size:14px;margin:16px 0;}
+    th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);}
+    th{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);}
+    td.good{color:var(--good);}td.bad{color:var(--bad);}td.neutral{color:var(--text-muted);}
+
+    aside{position:sticky;top:60px;align-self:start;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:18px 18px 8px;}
+    aside .label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
+    aside dl dt{font-family:var(--font-serif);font-size:15px;color:var(--text);margin-top:12px;}
+    aside dl dd{font-size:13px;color:var(--text-muted);margin:3px 0 10px;line-height:1.5;}
+
+    hr{border:none;border-top:1px solid var(--border);margin:48px 0;}
+    .credits{margin-top:60px;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:20px;}
+    .credits a{color:var(--text-muted);text-decoration:underline;}
+  </style>
+</head>
+<body>
+
+<nav class="series-nav">
+  <div class="sn-inner">
+    <div class="sn-series-label">Agent Engineering Series</div>
+    <div class="sn-steps">
+      <a href="agent-harness-flue-explainer.html" class="sn-step done"><span class="sn-num">1</span><span class="sn-title">What is a Harness?</span></a>
+      <a href="agent-skills-explainer.html" class="sn-step done"><span class="sn-num">2</span><span class="sn-title">Agent Skills</span></a>
+      <a href="long-running-agents-explainer.html" class="sn-step active"><span class="sn-num">3</span><span class="sn-title">Long-Running Agents</span></a>
+      <a href="flue-build-explainer.html" class="sn-step"><span class="sn-num">4</span><span class="sn-title">Building with Flue</span></a>
+    </div>
+    <div class="sn-arrows">
+      <a href="agent-skills-explainer.html">← Prev</a>
+      <a href="flue-build-explainer.html">Next →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Series · Part 3 of 4 · Agent Engineering</div>
+  <h1>Long-Running Agents<br><em>Hours, Days, and Weeks</em></h1>
+  <p class="subtitle">Most agents stop after one conversation. Long-running agents persist across context windows, sessions, and time — and the harness is what makes that possible.</p>
+  <div class="hero-badges">
+    <span class="badge">context rot</span>
+    <span class="badge">the Ralph loop</span>
+    <span class="badge">brain/hands/session split</span>
+  </div>
+</div>
+
+<div class="content">
+<main>
+
+<div class="section-label">The Problem</div>
+<h2>What breaks when agents run for a long time</h2>
+
+<p>Imagine you ask an agent to build a full feature end-to-end. Not a one-liner — a real feature that involves reading the codebase, writing a spec, implementing across multiple files, running tests, and preparing a PR. That might take an hour or more of continuous operation.</p>
+
+<p>Three things will go wrong, predictably, if the harness doesn't address them:</p>
+
+<div style="display:grid;gap:10px;margin:20px 0;">
+  <div style="padding:14px 16px;border-radius:8px;background:var(--surface);border:1.5px solid var(--border);display:flex;gap:12px;align-items:flex-start;">
+    <span style="color:var(--bad);font-size:20px;flex-shrink:0;">1</span>
+    <div><strong>Context rot</strong> — the context window fills with old, irrelevant information. Quality degrades well before the hard limit is hit. The model starts making worse decisions around step 15 of a 40-step task.</div>
+  </div>
+  <div style="padding:14px 16px;border-radius:8px;background:var(--surface);border:1.5px solid var(--border);display:flex;gap:12px;align-items:flex-start;">
+    <span style="color:var(--bad);font-size:20px;flex-shrink:0;">2</span>
+    <div><strong>No persistent state</strong> — if the session crashes, restarts, or hits a context limit, all progress is lost. The agent starts over with no memory of what it already tried.</div>
+  </div>
+  <div style="padding:14px 16px;border-radius:8px;background:var(--surface);border:1.5px solid var(--border);display:flex;gap:12px;align-items:flex-start;">
+    <span style="color:var(--bad);font-size:20px;flex-shrink:0;">3</span>
+    <div><strong>No self-verification</strong> — models consistently over-report task completion accuracy. An agent that has been running for 45 minutes will say "done" even when it isn't, because it has no external check on its own optimism.</div>
+  </div>
+</div>
+
+<p>These aren't edge cases. They happen in every long-running agent. The harness has specific patterns to address each one.</p>
+
+<!-- DEMO 1: CONTEXT ROT ANIMATION -->
+<div class="demo">
+  <div class="demo-header">
+    <div class="demo-title">Demo · Context Window Fill and Quality Degradation</div>
+  </div>
+  <div class="demo-body">
+    <div class="ctx-controls">
+      <button class="ctx-btn primary" onclick="startCtx()">▶ Start task</button>
+      <button class="ctx-btn" onclick="resetCtx()">Reset</button>
+      <div class="ctx-metric">Tokens: <span id="ctx-tokens">0</span></div>
+      <div class="ctx-metric">Output quality: <span id="ctx-quality">100%</span></div>
+      <div class="ctx-metric">Step: <span id="ctx-step">0</span></div>
+    </div>
+    <canvas id="ctx-canvas"></canvas>
+    <p class="caption">Watch the context window fill as the agent works through steps. Notice how output quality degrades well before the window is full — this is context rot. The harness fights this with compaction, offloading, and progressive disclosure.</p>
+  </div>
+</div>
+
+<!-- SECTION 2: THREE TYPES -->
+<div class="section-label">Three Kinds of Long-Running</div>
+<h2>Not all long-running agents are the same</h2>
+
+<p>"Long-running" means three different things depending on context. The harness patterns you need differ for each. Click each type:</p>
+
+<div class="type-grid">
+  <div class="type-card" onclick="selectType(this,'td-horizon')">
+    <div class="tc-icon">🧩</div>
+    <div class="tc-title">Long-horizon reasoning</div>
+    <div class="tc-desc">Multi-step planning where each step depends on the previous one.</div>
+  </div>
+  <div class="type-card" onclick="selectType(this,'td-execution')">
+    <div class="tc-icon">⏱️</div>
+    <div class="tc-title">Long-running execution</div>
+    <div class="tc-desc">Processes spanning hours or days with thousands of model invocations.</div>
+  </div>
+  <div class="type-card" onclick="selectType(this,'td-persistent')">
+    <div class="tc-icon">🧬</div>
+    <div class="tc-title">Persistent agency</div>
+    <div class="tc-desc">Agent identity that outlives individual tasks and accumulates memory over time.</div>
+  </div>
+</div>
+<div class="type-detail" id="td-horizon"><strong>Long-horizon reasoning:</strong> The agent plans 20-30 steps ahead and executes them with dependencies. The harness pattern is a plan file — a structured list of tasks the agent writes before starting. Each step is checked off. If the session resets, the plan survives in the filesystem.</div>
+<div class="type-detail" id="td-execution"><strong>Long-running execution:</strong> A coding sprint, a data analysis pipeline, or an automated testing run that takes hours. The harness pattern is checkpoint-resume — writing intermediate state to disk every N steps so a crash doesn't restart from zero.</div>
+<div class="type-detail" id="td-persistent"><strong>Persistent agency:</strong> An agent that is "always on" — monitoring a system, triaging issues as they arrive, accumulating knowledge about a codebase over months. The harness pattern is a memory layer with identity controls, preventing "memory drift" as knowledge accumulates.</div>
+
+<!-- SECTION 3: THE RALPH LOOP -->
+<div class="section-label">The Ralph Loop</div>
+<h2>The simplest pattern for long-horizon tasks</h2>
+
+<p>Here's a pattern that works for most individual developers doing multi-hour agent tasks. It was named after the person who first described it publicly. The key insight: <em>state lives outside the agent's context</em>. The filesystem maintains continuity. The model is stateless per-invocation.</p>
+
+<div class="demo">
+  <div class="demo-header">
+    <div class="demo-title">Demo · The Ralph Loop — step through it</div>
+  </div>
+  <div class="demo-body">
+    <div class="ralph-steps" id="ralph-steps">
+      <div class="ralph-step active" data-i="0">
+        <div class="rs-dot">📋</div>
+        <div class="rs-content">
+          <div class="rs-title">Select incomplete task from tasks.md</div>
+          <div class="rs-desc">The filesystem holds the task list. The agent reads it every loop iteration — not from memory, from disk. This is what survives context resets.</div>
+        </div>
+      </div>
+      <div class="ralph-step" data-i="1">
+        <div class="rs-dot">📝</div>
+        <div class="rs-content">
+          <div class="rs-title">Build prompt with task + persistent notes</div>
+          <div class="rs-desc">The harness assembles the prompt fresh each loop: current task, notes from previous iterations, and the AGENTS.md rules. The model gets a clean, focused context — not the accumulated noise of 30 previous steps.</div>
+        </div>
+      </div>
+      <div class="ralph-step" data-i="2">
+        <div class="rs-dot">🤖</div>
+        <div class="rs-content">
+          <div class="rs-title">Invoke the agent</div>
+          <div class="rs-desc">One focused invocation. The model works on one task with a clean context. Not "continue from where you left off" — a fresh call with all the context it needs, assembled by the harness.</div>
+        </div>
+      </div>
+      <div class="ralph-step" data-i="3">
+        <div class="rs-dot">✅</div>
+        <div class="rs-content">
+          <div class="rs-title">Run validation checks</div>
+          <div class="rs-desc">External verification — not the agent checking its own work. Type check passes? Tests pass? Spec criteria met? These checks happen outside the model's context, preventing the self-grading bias.</div>
+        </div>
+      </div>
+      <div class="ralph-step" data-i="4">
+        <div class="rs-dot">📊</div>
+        <div class="rs-content">
+          <div class="rs-title">Append results to progress.log</div>
+          <div class="rs-desc">Every iteration's results go to an append-only log. This is the session-as-event-log pattern — the most underappreciated piece of long-running agent design. If the process crashes, the log survives.</div>
+        </div>
+      </div>
+      <div class="ralph-step" data-i="5">
+        <div class="rs-dot">🔁</div>
+        <div class="rs-content">
+          <div class="rs-title">Update task status — repeat</div>
+          <div class="rs-desc">Mark task complete in tasks.md. Select the next incomplete task. Loop. The harness intercepts any attempt to stop early and forces continuation until all tasks are complete.</div>
+        </div>
+      </div>
+    </div>
+    <div class="ralph-controls">
+      <button onclick="ralphPrev()">← Prev</button>
+      <div id="loop-count">Step 1 / 6</div>
+      <button onclick="ralphNext()">Next →</button>
+      <button class="rp" onclick="ralphReset()">↺ Reset</button>
+    </div>
+    <p class="caption">The key is that tasks.md and progress.log are the source of truth — not the model's context window. Any loop iteration can restart cleanly because state lives on disk.</p>
+  </div>
+</div>
+
+<!-- SECTION 4: BRAIN/HANDS/SESSION SPLIT -->
+<div class="section-label">Architecture</div>
+<h2>Brain, Hands, Session — Anthropic's decoupling</h2>
+
+<p>For production long-running agents, the harness decouples three concerns that most simple agents conflate:</p>
+
+<div class="arch-compare">
+  <div class="arch-box">
+    <div class="arch-header bare">Without the split</div>
+    <div class="arch-layers">
+      <div class="arch-layer model">🤖 Model (everything mixed together)</div>
+      <div class="arch-layer missing">reasoning, execution,<br>and state all in one context window</div>
+      <div class="arch-layer missing">crashes lose all state</div>
+      <div class="arch-layer missing">no recovery possible</div>
+    </div>
+  </div>
+  <div class="arch-box">
+    <div class="arch-header lra">With the Brain/Hands/Session split</div>
+    <div class="arch-layers">
+      <div class="arch-layer brain">🧠 Brain — model + harness loop<br><span style="font-size:11px;opacity:0.7;">reasoning, planning, decision-making</span></div>
+      <div class="arch-layer hands">🤝 Hands — ephemeral sandbox<br><span style="font-size:11px;opacity:0.7;">code execution, file ops, network calls</span></div>
+      <div class="arch-layer session">📋 Session — append-only event log<br><span style="font-size:11px;opacity:0.7;">every thought, tool call, observation</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="quote-block">
+  "The session-as-event-log idea is the part most teams underappreciate."
+  <cite>— Addy Osmani, Long-Running Agents</cite>
+</div>
+
+<p>The hands are ephemeral — they can crash, reset, or be swapped without losing any work. The brain focuses on reasoning, not execution details. The session log is the permanent record: if a container dies mid-task, the log survives. Recovery is possible because the log has everything.</p>
+
+<!-- SECTION 5: PLANNER/WORKER/JUDGE -->
+<div class="section-label">The Evaluation Problem</div>
+<h2>Agents can't reliably grade their own work</h2>
+
+<p>Here's a subtle but critical problem: when an agent evaluates whether it's done, it has a positive bias. It just did the work. It wants it to be correct. This isn't a bug — it's an inherent feature of training on human feedback where correctness and effort correlate.</p>
+
+<p>The solution is architectural: separate the roles. Cursor's approach uses three distinct roles:</p>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0;">
+  <div style="padding:16px;border-radius:8px;background:#EEF2FF;border:1.5px solid #C7D2FE;text-align:center;">
+    <div style="font-size:24px;margin-bottom:8px;">🗺️</div>
+    <div style="font-family:var(--font-serif);font-size:16px;font-weight:600;color:#3730A3;margin-bottom:6px;">Planner</div>
+    <div style="font-size:12px;color:#4338CA;line-height:1.5;">Explores codebase, emits tasks, spawns sub-planners. Never executes — only maps the work.</div>
+  </div>
+  <div style="padding:16px;border-radius:8px;background:#ECFDF5;border:1.5px solid #A7F3D0;text-align:center;">
+    <div style="font-size:24px;margin-bottom:8px;">⚙️</div>
+    <div style="font-family:var(--font-serif);font-size:16px;font-weight:600;color:#065F46;margin-bottom:6px;">Worker</div>
+    <div style="font-size:12px;color:#047857;line-height:1.5;">Focused executor. No cross-coordination overhead. One task, one context, one verification step.</div>
+  </div>
+  <div style="padding:16px;border-radius:8px;background:#FFF7ED;border:1.5px solid #FED7AA;text-align:center;">
+    <div style="font-size:24px;margin-bottom:8px;">⚖️</div>
+    <div style="font-family:var(--font-serif);font-size:16px;font-weight:600;color:#9A3412;margin-bottom:6px;">Judge</div>
+    <div style="font-size:12px;color:#C2410C;line-height:1.5;">Determines if iteration is complete. Triggers restarts when work doesn't meet criteria. Never the same agent that did the work.</div>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>Notable finding:</strong> Different model sizes excel at different roles. Frontier models (the most expensive/capable) sometimes underperform for extended autonomous work because they're more likely to stop prematurely. Smaller, faster models can outperform them as workers when the harness provides tight enough structure.
+</div>
+
+<!-- SECTION 6: PRODUCTION PATTERNS -->
+<div class="section-label">5 Production Patterns</div>
+<h2>How to build a long-running harness</h2>
+
+<div class="patterns-grid">
+  <div class="pattern-card">
+    <div class="p-label">Pattern 1</div>
+    <div class="p-title">Checkpoint-and-resume</div>
+    <div class="p-body">Write intermediate state to disk every N work units. When a container fails at step 23 of 40, the next invocation reads the checkpoint and continues from step 24. No rework, no data loss. Every long-running agent needs this.</div>
+  </div>
+  <div class="pattern-card">
+    <div class="p-label">Pattern 2</div>
+    <div class="p-title">Delegated approval</div>
+    <div class="p-body">Pause the agent mid-task with full execution state intact: reasoning chains, memory, tool history all preserved. A human reviews and approves. The agent resumes exactly where it stopped, with no context loss. This makes human-in-the-loop practical for long tasks.</div>
+  </div>
+  <div class="pattern-card">
+    <div class="p-label">Pattern 3</div>
+    <div class="p-title">Memory-layered context</div>
+    <div class="p-body">Govern accumulated knowledge like microservices. Different types of memory — short-term working memory, session memory, long-term project memory — have different read/write policies. Prevents "memory drift" where older context corrupts newer reasoning.</div>
+  </div>
+  <div class="pattern-card">
+    <div class="p-label">Pattern 4</div>
+    <div class="p-title">Ambient processing</div>
+    <div class="p-body">Event-driven agents that operate on streams without user interaction: monitoring CI results, triaging new issues as they're created, sending alerts when thresholds are crossed. The harness manages scheduling, not the model. Policy updates happen via gateway config, not code redeployment.</div>
+  </div>
+  <div class="pattern-card">
+    <div class="p-label">Pattern 5</div>
+    <div class="p-title">Fleet orchestration</div>
+    <div class="p-body">A coordinator agent spawns specialist sub-agents for isolated tasks. Each sub-agent has its own identity and context, preventing cascading failures — if one specialist fails, it doesn't corrupt the state of the others. The coordinator aggregates results.</div>
+  </div>
+</div>
+
+<hr>
+
+<div class="section-label">Practical Guidance</div>
+<h2>Which approach to use when</h2>
+
+<table>
+  <thead>
+    <tr><th>Your situation</th><th>Recommended approach</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Individual dev, multi-hour tasks</strong></td>
+      <td>Ralph loop + plan.md + progress.log. Start here — simple and effective for 90% of cases.</td>
+    </tr>
+    <tr>
+      <td><strong>Product with agents as a feature</strong></td>
+      <td>Managed runtime (Claude Managed Agents, Google Agent Platform). Don't build persistence from scratch.</td>
+    </tr>
+    <tr>
+      <td><strong>Operational agents (monitoring, triaging)</strong></td>
+      <td>Managed memory + scheduled execution (Cloud Run + scheduler). Combine for tasks that accumulate state over invocations.</td>
+    </tr>
+    <tr>
+      <td><strong>Multi-agent coordination</strong></td>
+      <td>Planner/worker/judge split. Coordinator handles delegation; specialists handle execution in isolation.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>What to build first:</strong> Before context rot management, before fleet orchestration — invest in the session log. An append-only event log of every thought, tool call, and observation is the foundation everything else builds on. With a good session log, you can debug any failure. Without it, long-running agent failures are nearly impossible to diagnose.
+</div>
+
+<div class="credits">
+  Source: <a href="https://addyosmani.com/blog/long-running-agents/" target="_blank">Addy Osmani — Long-Running Agents (addyosmani.com)</a><br>
+  Series: <a href="agent-skills-explainer.html">← Part 2: Agent Skills</a> · <a href="flue-build-explainer.html">Part 4: Building with Flue →</a>
+</div>
+</main>
+
+<aside>
+  <div class="label">Key Terms</div>
+  <dl>
+    <dt>Context rot</dt>
+    <dd>Degraded output quality as a model's context fills with stale information. Happens well before the hard context limit.</dd>
+    <dt>Ralph loop</dt>
+    <dd>A bash-script loop: select task → build prompt → invoke agent → validate → log → update status → repeat. State lives on disk, not in model context.</dd>
+    <dt>Brain/Hands/Session</dt>
+    <dd>Anthropic's decoupling: brain (reasoning), hands (execution sandbox), session (append-only event log). Each can fail independently.</dd>
+    <dt>Planner/Worker/Judge</dt>
+    <dd>Cursor's three-role model. Never let the implementer evaluate their own work.</dd>
+    <dt>Checkpoint-resume</dt>
+    <dd>Writing intermediate state every N steps. Enables recovery from failures without restarting from scratch.</dd>
+    <dt>Session log</dt>
+    <dd>Append-only record of every model invocation: thought, tool call, observation. The foundation of long-running agent recovery.</dd>
+    <dt>Memory drift</dt>
+    <dd>When accumulated agent memory from older sessions corrupts newer reasoning. Prevented by memory-layered context with identity controls.</dd>
+    <dt>Ambient processing</dt>
+    <dd>Event-driven agents operating on streams without user interaction. Policy via config, not code redeployment.</dd>
+  </dl>
+</aside>
+</div>
+
+<script>
+// CONTEXT ROT ANIMATION
+let ctxRAF, ctxRunning = false, ctxTokens = 0, ctxStep = 0;
+const maxTokens = 128000;
+const canvasEl = document.getElementById('ctx-canvas');
+const ctx = canvasEl.getContext('2d');
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  canvasEl.width = canvasEl.offsetWidth * dpr;
+  canvasEl.height = 200 * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function qualityFromFill(fill) {
+  if (fill < 0.3) return 100;
+  if (fill < 0.5) return Math.round(100 - (fill - 0.3) * 50);
+  if (fill < 0.75) return Math.round(90 - (fill - 0.5) * 200);
+  return Math.max(5, Math.round(40 - (fill - 0.75) * 140));
+}
+
+function drawCtx() {
+  const W = canvasEl.offsetWidth, H = 200;
+  ctx.clearRect(0, 0, W, H);
+  const fill = ctxTokens / maxTokens;
+  const quality = qualityFromFill(fill);
+
+  // Background
+  ctx.fillStyle = '#1E1E2E';
+  ctx.fillRect(0, 0, W, H);
+
+  // Context window bar
+  const bx = 20, by = 30, bw = W - 40, bh = 28;
+  ctx.fillStyle = '#313244';
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 6); ctx.fill();
+
+  const fillColor = fill < 0.5 ? '#6366F1' : fill < 0.75 ? '#F38BA8' : '#DC2626';
+  ctx.fillStyle = fillColor;
+  ctx.beginPath(); ctx.roundRect(bx, by, bw * fill, bh, 6); ctx.fill();
+
+  ctx.fillStyle = '#CDD6F4'; ctx.font = '11px Source Code Pro, monospace';
+  ctx.fillText('Context window: ' + Math.round(fill * 100) + '% full', bx, by - 8);
+  ctx.textAlign = 'right';
+  ctx.fillText(Math.round(ctxTokens / 1000) + 'K / ' + Math.round(maxTokens / 1000) + 'K tokens', bx + bw, by - 8);
+  ctx.textAlign = 'left';
+
+  // Quality bar
+  const qy = 90;
+  ctx.fillStyle = '#313244';
+  ctx.beginPath(); ctx.roundRect(bx, qy, bw, bh, 6); ctx.fill();
+  const qColor = quality > 70 ? '#A6E3A1' : quality > 40 ? '#F9E2AF' : '#F38BA8';
+  ctx.fillStyle = qColor;
+  ctx.beginPath(); ctx.roundRect(bx, qy, bw * (quality/100), bh, 6); ctx.fill();
+  ctx.fillStyle = '#CDD6F4'; ctx.font = '11px Source Code Pro, monospace';
+  ctx.fillText('Output quality: ' + quality + '%', bx, qy - 8);
+
+  // Step markers
+  const steps = [
+    {tok: 5000, label:'Step 5\n"Good output"'},
+    {tok: 32000, label:'Step 15\nQuality starts dropping'},
+    {tok: 64000, label:'Step 25\nSevere context rot'},
+    {tok: 100000, label:'Step 35\nNear-unusable'},
+  ];
+  steps.forEach(s => {
+    const sx = bx + (s.tok / maxTokens) * bw;
+    ctx.strokeStyle = 'rgba(205,214,244,0.2)'; ctx.lineWidth = 1;
+    ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(sx, by); ctx.lineTo(sx, qy + bh + 35); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(205,214,244,0.5)'; ctx.font = '10px Source Code Pro, monospace';
+    const lines = s.label.split('\n');
+    lines.forEach((l, i) => ctx.fillText(l, sx + 3, qy + bh + 14 + i * 12));
+    if (ctxTokens >= s.tok) {
+      ctx.fillStyle = '#6366F1';
+      ctx.beginPath(); ctx.arc(sx, by - 2, 4, 0, Math.PI*2); ctx.fill();
+    }
+  });
+
+  document.getElementById('ctx-tokens').textContent = Math.round(ctxTokens/1000) + 'K';
+  document.getElementById('ctx-quality').textContent = quality + '%';
+  document.getElementById('ctx-step').textContent = ctxStep;
+}
+
+function startCtx() {
+  if (ctxRunning) return;
+  ctxRunning = true;
+  function tick() {
+    ctxTokens = Math.min(ctxTokens + 1200, maxTokens - 100);
+    ctxStep++;
+    drawCtx();
+    if (ctxTokens < maxTokens - 200) ctxRAF = setTimeout(tick, 80);
+    else ctxRunning = false;
+  }
+  tick();
+}
+function resetCtx() {
+  ctxRunning = false; clearTimeout(ctxRAF);
+  ctxTokens = 0; ctxStep = 0;
+  drawCtx();
+}
+drawCtx();
+
+// THREE TYPES
+function selectType(card, id) {
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.type-detail').forEach(d => d.classList.remove('visible'));
+  card.classList.add('active');
+  document.getElementById(id).classList.add('visible');
+}
+
+// RALPH LOOP
+let ralphStep = 0;
+const ralphEls = document.querySelectorAll('.ralph-step');
+function updateRalph() {
+  ralphEls.forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i < ralphStep) el.classList.add('done');
+    if (i === ralphStep) el.classList.add('active');
+  });
+  document.getElementById('loop-count').textContent = 'Step ' + (ralphStep + 1) + ' / ' + ralphEls.length;
+}
+function ralphNext() { if (ralphStep < ralphEls.length - 1) { ralphStep++; updateRalph(); } }
+function ralphPrev() { if (ralphStep > 0) { ralphStep--; updateRalph(); } }
+function ralphReset() { ralphStep = 0; updateRalph(); }
+</script>
+</body>
+</html>
