@@ -922,19 +922,19 @@ const components = {
   tools: {
     label: '🔧 Tools & Skills',
     cls: 'tools',
-    cap: 58,
+    cap: 60,
     msg: 'The agent can now actually do things: read files, run code, call APIs, write to disk. Without tools, it could only generate text. Now it can act.'
   },
   sandbox: {
     label: '🏖️ Sandbox',
     cls: 'sandbox',
-    cap: 74,
+    cap: 80,
     msg: 'Code runs in isolation. The agent can experiment, test, and verify without any risk to your real system. Mistakes stay contained.'
   },
   hooks: {
     label: '🪝 Hooks & Guardrails',
     cls: 'hooks',
-    cap: 92,
+    cap: 100,
     msg: '✅ Full agent. Hooks block destructive actions before they happen. The harness enforces your rules structurally — not through trust, but through code.'
   }
 };
@@ -951,7 +951,7 @@ function addComponent(key) {
   div.className = 'ap-layer ' + comp.cls;
   div.innerHTML = comp.label;
   container.appendChild(div);
-  const totalCap = Math.min(12 + Array.from(addedComponents).reduce((s, k) => s + components[k].cap - 12, 0) + 12, 92);
+  const totalCap = Math.min(12 + Array.from(addedComponents).reduce((s, k) => s + components[k].cap - 12, 0) + 12, 100);
   const realCap = comp.cap;
   const fill = document.getElementById('cap-fill');
   fill.style.width = realCap + '%';
