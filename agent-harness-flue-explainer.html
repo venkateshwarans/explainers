@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is a Harness? — an interactive explainer for AI agents</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Figtree:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #FAF9F7;
+      --surface:   #FFFFFF;
+      --demo-bg:   #F3F2EE;
+      --text:      #2D2D2D;
+      --text-muted:#666666;
+      --border:    #E5E5E0;
+      --accent:    #D97757;
+      --accent-bg: #FDF0EB;
+      --good:      #16A34A;
+      --bad:       #DC2626;
+      --warn:      #D97706;
+      --font-serif: 'Newsreader', Georgia, serif;
+      --font-sans:  'Figtree', system-ui, sans-serif;
+      --font-mono:  'Source Code Pro', ui-monospace, monospace;
+      --radius:     12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 17px;
+      line-height: 1.68;
+      padding: 0 0 120px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(160deg, #2D1B0E 0%, #1a0f06 60%, #0f0a05 100%);
+      padding: 72px 24px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 60%, rgba(217,119,87,0.18) 0%, transparent 65%);
+    }
+    .hero-eyebrow {
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: rgba(217,119,87,0.7);
+      margin-bottom: 20px; position: relative;
+    }
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 700; letter-spacing: -0.02em;
+      line-height: 1.05; color: #FDF0EB;
+      margin-bottom: 20px; position: relative;
+    }
+    .hero h1 em { color: var(--accent); font-style: normal; }
+    .hero .subtitle {
+      font-size: 18px; color: rgba(253,240,235,0.65);
+      max-width: 540px; margin: 0 auto 32px;
+      line-height: 1.5; position: relative;
+    }
+    .hero-badges {
+      display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+      position: relative;
+    }
+    .badge {
+      font-family: var(--font-mono); font-size: 11px;
+      padding: 5px 12px; border-radius: 20px;
+      border: 1px solid rgba(217,119,87,0.3);
+      color: rgba(253,240,235,0.6);
+      background: rgba(217,119,87,0.1);
+    }
+
+    /* ── LAYOUT ── */
+    .content {
+      max-width: 1040px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 240px;
+      gap: 56px; align-items: start;
+      padding: 56px 24px 0;
+    }
+    @media (max-width: 880px) {
+      .content { grid-template-columns: 1fr; }
+      aside { display: none; }
+    }
+
+    /* ── TYPE ── */
+    .section-label {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--accent);
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px; margin-top: 52px;
+    }
+    .section-label::before { content: ''; flex: 0 0 24px; height: 1px; background: var(--accent); }
+    h2 {
+      font-family: var(--font-serif); font-size: clamp(22px, 3vw, 28px);
+      font-weight: 600; letter-spacing: -0.01em;
+      line-height: 1.2; margin-bottom: 16px; color: var(--text);
+    }
+    p { margin-bottom: 15px; }
+    a { color: var(--accent); }
+    strong { color: var(--text); }
+
+    /* ── CALLOUT ── */
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: var(--accent-bg);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 14px 18px; margin: 20px 0; font-size: 15px;
+    }
+
+    /* ── DEMO PANELS ── */
+    .demo {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      margin: 28px 0; overflow: hidden;
+    }
+    .demo-header {
+      background: var(--demo-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .demo-title {
+      font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); flex: 1;
+    }
+    .demo-body { padding: 24px; }
+    .caption { font-size: 13px; color: var(--text-muted); margin-top: 14px; line-height: 1.5; font-style: italic; }
+
+    /* ── ANALOGY CARDS ── */
+    .analogy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px; margin: 20px 0;
+    }
+    @media (max-width: 600px) { .analogy-grid { grid-template-columns: 1fr; } }
+    .analogy-card {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 18px 16px; text-align: center;
+      transition: border-color 0.2s, transform 0.15s;
+      cursor: pointer;
+    }
+    .analogy-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .analogy-card .icon { font-size: 32px; margin-bottom: 10px; }
+    .analogy-card .a-title { font-family: var(--font-serif); font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .analogy-card .a-body { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .analogy-card .a-insight {
+      display: none; margin-top: 10px; padding: 8px 10px;
+      background: var(--accent-bg); border-radius: 8px;
+      font-size: 12px; color: var(--accent); line-height: 1.5;
+      text-align: left;
+    }
+    .analogy-card.active { border-color: var(--accent); }
+    .analogy-card.active .a-insight { display: block; }
+
+    /* ── BUILD DEMO ── */
+    .build-arena {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) { .build-arena { grid-template-columns: 1fr; } }
+    .component-list {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .comp-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--surface); cursor: pointer;
+      text-align: left; transition: all 0.15s;
+      font-family: var(--font-sans);
+    }
+    .comp-btn:hover:not(.added) { border-color: var(--accent); background: var(--accent-bg); }
+    .comp-btn.added { border-color: var(--good); background: #F0FDF4; }
+    .comp-btn .cb-icon { font-size: 18px; flex-shrink: 0; }
+    .comp-btn .cb-label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .comp-btn .cb-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .comp-btn.added .cb-label { color: #166534; }
+
+    .agent-preview {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--demo-bg);
+      min-height: 320px; padding: 16px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .agent-preview .ap-title {
+      font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px;
+    }
+    .ap-model {
+      background: #D97757; border-radius: 8px; padding: 12px 14px;
+      text-align: center; color: white; font-family: var(--font-mono);
+      font-size: 12px; font-weight: 600;
+    }
+    .ap-layer {
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 12px; font-family: var(--font-mono);
+      animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 8px;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+    .ap-layer.memory { background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+    .ap-layer.tools { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+    .ap-layer.sandbox { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+    .ap-layer.hooks { background: #FDF2F8; color: #701A75; border: 1px solid #F0ABFC; }
+    .ap-layer.prompts { background: #FFF7ED; color: #9A3412; border: 1px solid #FED7AA; }
+
+    .capability-bar {
+      margin-top: 8px; padding: 10px 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .cap-label { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 6px; }
+    .cap-track { background: var(--demo-bg); border-radius: 4px; height: 16px; overflow: hidden; }
+    .cap-fill {
+      height: 100%; background: var(--accent); border-radius: 4px;
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex; align-items: center; padding-left: 6px;
+      font-size: 10px; font-family: var(--font-mono); color: white;
+    }
+
+    /* ── FAILURE DEMO ── */
+    .scenario-tabs {
+      display: flex; gap: 2px; border-bottom: 1px solid var(--border);
+      margin-bottom: 0; padding: 0 24px;
+      background: var(--demo-bg);
+    }
+    .sc-tab {
+      padding: 10px 16px; cursor: pointer;
+      font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 0.15s; background: none; border-top: none; border-left: none; border-right: none;
+      appearance: none;
+    }
+    .sc-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .sc-panel { display: none; padding: 20px 24px; }
+    .sc-panel.active { display: block; }
+    .comparison {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    @media (max-width: 550px) { .comparison { grid-template-columns: 1fr; } }
+    .cmp-box { border-radius: 8px; padding: 14px 16px; font-size: 13px; line-height: 1.55; }
+    .cmp-box.bad { background: #FEF2F2; border: 1.5px solid #FECACA; }
+    .cmp-box.good { background: #F0FDF4; border: 1.5px solid #A7F3D0; }
+    .cmp-box .cmp-label {
+      font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 8px;
+    }
+    .cmp-box.bad .cmp-label { color: var(--bad); }
+    .cmp-box.good .cmp-label { color: var(--good); }
+
+    /* ── RATCHET ── */
+    .ratchet-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .ratchet-wrap { grid-template-columns: 1fr; } }
+    .failure-list { display: flex; flex-direction: column; gap: 6px; }
+    .fail-btn {
+      padding: 10px 14px; border-radius: 8px;
+      border: 1.5px solid var(--border); background: var(--surface);
+      font-family: var(--font-sans); font-size: 13px;
+      cursor: pointer; text-align: left; color: var(--text);
+      transition: all 0.15s;
+    }
+    .fail-btn:hover { background: #FEF2F2; border-color: #FECACA; }
+    .fail-btn.done { border-color: var(--good); background: #F0FDF4; color: #166534; }
+    .fail-btn.done::before { content: "✓  "; }
+    .codebox {
+      background: #1E1E2E; border-radius: 8px;
+      padding: 16px; font-family: var(--font-mono);
+      font-size: 12px; line-height: 1.7; color: #CDD6F4;
+      min-height: 220px; overflow: auto;
+    }
+    .c-comment { color: #6C7086; }
+    .c-heading { color: #89B4FA; }
+    .c-rule { color: #A6E3A1; }
+    .c-new { color: #F38BA8; animation: fadeIn 0.35s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; } }
+    .ratchet-feedback {
+      margin-top: 10px; padding: 10px 14px; border-radius: 8px;
+      font-size: 13px; background: var(--accent-bg);
+      border: 1px solid var(--accent); color: var(--text);
+    }
+
+    /* ── HAAS EVOLUTION DEMO ── */
+    .evolution-steps {
+      display: flex; gap: 0; overflow-x: auto;
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+    }
+    .ev-step {
+      flex: 1; min-width: 120px; padding: 16px 12px;
+      border-right: 1px solid var(--border); text-align: center;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .ev-step:last-child { border-right: none; }
+    .ev-step:hover { background: var(--demo-bg); }
+    .ev-step.active { background: var(--accent-bg); }
+    .ev-step .es-num {
+      font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px;
+    }
+    .ev-step .es-title {
+      font-family: var(--font-serif); font-size: 14px; font-weight: 600;
+      color: var(--text); line-height: 1.3; margin-bottom: 4px;
+    }
+    .ev-step.active .es-title { color: var(--accent); }
+    .ev-step .es-sub { font-size: 11px; color: var(--text-muted); }
+    .ev-detail {
+      margin-top: 14px; padding: 16px;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius); font-size: 14px; line-height: 1.6;
+      min-height: 80px;
+    }
+
+    /* ── TABLE ── */
+    table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 16px 0; }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    th { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+    td.good { color: var(--good); } td.bad { color: var(--bad); } td.neutral { color: var(--text-muted); }
+
+    /* ── SIDEBAR ── */
+    aside {
+      position: sticky; top: 32px; align-self: start;
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); padding: 18px 18px 8px;
+    }
+    aside .label {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px;
+    }
+    aside dl dt { font-family: var(--font-serif); font-size: 15px; color: var(--text); margin-top: 12px; }
+    aside dl dd { font-size: 13px; color: var(--text-muted); margin: 3px 0 10px; line-height: 1.5; }
+
+    hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+    /* ── NEXT STEPS ── */
+    .next-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 20px 0;
+    }
+    @media (max-width: 600px) { .next-grid { grid-template-columns: 1fr; } }
+    .next-card {
+      padding: 18px; border-radius: var(--radius);
+      border: 1.5px solid var(--border); background: var(--surface);
+    }
+    .next-card .nc-label {
+      font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px;
+    }
+    .next-card .nc-title {
+      font-family: var(--font-serif); font-size: 16px; font-weight: 600; margin-bottom: 6px;
+    }
+    .next-card .nc-body { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+
+    .credits { margin-top: 60px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 20px; }
+    .credits a { color: var(--text-muted); text-decoration: underline; }
+
+    button.primary {
+      appearance: none; border: 1.5px solid var(--accent);
+      background: var(--accent); color: white; border-radius: 8px;
+      font-family: var(--font-mono); font-size: 12px;
+      padding: 8px 18px; cursor: pointer; transition: opacity 0.15s;
+    }
+    button.primary:hover { opacity: 0.85; }
+    code {
+      font-family: var(--font-mono); font-size: 13px;
+      background: var(--demo-bg); padding: 1px 6px; border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Interactive Explainer · AI Agents · Beginner-friendly</div>
+  <h1>What is a <em>Harness</em>?</h1>
+  <p class="subtitle">How raw AI models get turned into agents that can actually do your work — and why the scaffolding matters more than the model.</p>
+  <div class="hero-badges">
+    <span class="badge">no AI background required</span>
+    <span class="badge">interactive demos</span>
+    <span class="badge">build something at the end</span>
+  </div>
+</div>
+
+<div class="content">
+<main>
+
+<!-- ── SECTION 1: PHYSICAL INTUITION ── -->
+<div class="section-label">Part 1</div>
+<h2>Start here: what is a harness, in everyday life?</h2>
+
+<p>Before we talk about AI, let's talk about harnesses you already know. A harness is a system of connections and constraints that lets something <em>powerful</em> do <em>useful work safely</em>.</p>
+
+<p>Click each card to see how the idea maps to AI:</p>
+
+<div class="analogy-grid">
+  <div class="analogy-card" onclick="toggleAnalogy(this)">
+    <div class="icon">🧗</div>
+    <div class="a-title">Climbing harness</div>
+    <div class="a-body">Connects a climber to a rope. Doesn't limit how well they climb — limits how far they fall.</div>
+    <div class="a-insight">→ An AI harness connects the model to your tools and systems. It doesn't limit how smart the model is — it limits what happens when the model makes a mistake.</div>
+  </div>
+  <div class="analogy-card" onclick="toggleAnalogy(this)">
+    <div class="icon">🐴</div>
+    <div class="a-title">Horse harness</div>
+    <div class="a-body">Channels a horse's strength into pulling a plow. Without it, the horse is powerful but useless for farming.</div>
+    <div class="a-insight">→ A raw AI model has capability, but no direction. The harness channels that capability into a specific task: review this PR, triage this issue, analyze this data.</div>
+  </div>
+  <div class="analogy-card" onclick="toggleAnalogy(this)">
+    <div class="icon">⚡</div>
+    <div class="a-title">Electrical harness</div>
+    <div class="a-body">A bundle of wires that routes power and signals to the right place in a car. Without it: sparks everywhere.</div>
+    <div class="a-insight">→ An AI harness routes information: the right context to the model, tool results back to the right place, errors to the right handler. Without it: unpredictable behavior.</div>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>The pattern:</strong> A harness doesn't make the powerful thing more powerful. It makes the powerful thing <em>useful, safe, and directed</em>. That's exactly what a harness does for an AI model.
+</div>
+
+<!-- ── SECTION 2: MODEL VS AGENT ── -->
+<div class="section-label">Part 2</div>
+<h2>A model is not an agent. What's missing?</h2>
+
+<p>Here's the thing most people misunderstand about AI: what you're paying for in a tool like Claude Code or GitHub Copilot is <em>not</em> the model. Models are increasingly commoditized. What you're paying for is the harness around it.</p>
+
+<p>A raw AI model is just a text predictor. You give it text, it predicts what comes next. That's genuinely impressive — but it can't:</p>
+
+<div style="display: grid; gap: 8px; margin: 20px 0;">
+  <div style="padding: 10px 16px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; display: flex; gap: 12px; align-items: flex-start;">
+    <span style="color: var(--bad); flex-shrink: 0;">✗</span>
+    <span><strong>Remember your codebase</strong> — it forgets everything after every conversation</span>
+  </div>
+  <div style="padding: 10px 16px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; display: flex; gap: 12px; align-items: flex-start;">
+    <span style="color: var(--bad); flex-shrink: 0;">✗</span>
+    <span><strong>Run code</strong> — it can only generate text, not execute anything</span>
+  </div>
+  <div style="padding: 10px 16px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; display: flex; gap: 12px; align-items: flex-start;">
+    <span style="color: var(--bad); flex-shrink: 0;">✗</span>
+    <span><strong>Enforce your rules</strong> — it might ignore your coding conventions without a system to enforce them</span>
+  </div>
+  <div style="padding: 10px 16px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; display: flex; gap: 12px; align-items: flex-start;">
+    <span style="color: var(--bad); flex-shrink: 0;">✗</span>
+    <span><strong>Do multi-step tasks safely</strong> — it might delete the wrong file, expose a secret, or stop halfway through</span>
+  </div>
+</div>
+
+<p>The harness is what fills all these gaps. Let's build one, step by step.</p>
+
+<!-- ── DEMO 1: BUILD-A-HARNESS ── -->
+<div class="demo">
+  <div class="demo-header">
+    <div class="demo-title">Demo · Build Your Agent: Add Harness Components</div>
+    <button class="primary" onclick="resetBuild()" style="font-size: 11px; padding: 5px 12px;">Reset</button>
+  </div>
+  <div class="demo-body">
+    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">Click components to add them to your agent. Watch the "agent capability" bar grow and see what each layer unlocks.</p>
+    <div class="build-arena">
+      <div class="component-list">
+        <button class="comp-btn" id="c-prompts" onclick="addComponent('prompts')">
+          <div class="cb-icon">📋</div>
+          <div>
+            <div class="cb-label">System Prompt &amp; AGENTS.md</div>
+            <div class="cb-desc">Rules, conventions, and identity</div>
+          </div>
+        </button>
+        <button class="comp-btn" id="c-memory" onclick="addComponent('memory')">
+          <div class="cb-icon">🧠</div>
+          <div>
+            <div class="cb-label">Memory / Session State</div>
+            <div class="cb-desc">Remembers work across runs</div>
+          </div>
+        </button>
+        <button class="comp-btn" id="c-tools" onclick="addComponent('tools')">
+          <div class="cb-icon">🔧</div>
+          <div>
+            <div class="cb-label">Tools &amp; Skills</div>
+            <div class="cb-desc">Read files, run code, call APIs</div>
+          </div>
+        </button>
+        <button class="comp-btn" id="c-sandbox" onclick="addComponent('sandbox')">
+          <div class="cb-icon">🏖️</div>
+          <div>
+            <div class="cb-label">Sandbox</div>
+            <div class="cb-desc">Isolated execution, no accidents</div>
+          </div>
+        </button>
+        <button class="comp-btn" id="c-hooks" onclick="addComponent('hooks')">
+          <div class="cb-icon">🪝</div>
+          <div>
+            <div class="cb-label">Hooks &amp; Guardrails</div>
+            <div class="cb-desc">Block bad actions, enforce rules</div>
+          </div>
+        </button>
+      </div>
+      <div>
+        <div class="agent-preview" id="agent-preview">
+          <div class="ap-title">Your Agent</div>
+          <div class="ap-model">🤖 AI Model (bare)</div>
+          <div id="layer-container"></div>
+        </div>
+        <div class="capability-bar">
+          <div class="cap-label">Agent Capability</div>
+          <div class="cap-track">
+            <div class="cap-fill" id="cap-fill" style="width: 12%">12%</div>
+          </div>
+        </div>
+        <div id="build-msg" style="margin-top: 10px; font-size: 13px; color: var(--text-muted); min-height: 48px; padding: 8px 12px; background: var(--demo-bg); border-radius: 8px;">
+          A bare model: can answer questions but can't do much on its own. Add components to unlock real capability.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 3: THE HARNESS PROBLEM ── -->
+<div class="section-label">Part 3</div>
+<h2>What goes wrong without a harness</h2>
+
+<p>Now you've seen what a harness is. Here's what happens in practice when teams skip it. These are real patterns you'll hit within days of building any serious AI feature.</p>
+
+<div class="demo">
+  <div class="scenario-tabs" id="scenario-tabs">
+    <button class="sc-tab active" onclick="showScenario(this,'s-chaos')">Tool chaos</button>
+    <button class="sc-tab" onclick="showScenario(this,'s-amnesia')">Amnesia</button>
+    <button class="sc-tab" onclick="showScenario(this,'s-guard')">No guardrails</button>
+    <button class="sc-tab" onclick="showScenario(this,'s-boiler')">Boilerplate</button>
+  </div>
+  <div class="sc-panel active" id="s-chaos">
+    <div class="comparison">
+      <div class="cmp-box bad">
+        <div class="cmp-label">Without harness</div>
+        The agent has 40+ raw tools available all at once. It picks the wrong one, uses 3 tools when 1 would do, misses the right tool entirely, and exhausts its context window just processing all the options.
+      </div>
+      <div class="cmp-box good">
+        <div class="cmp-label">With harness</div>
+        The harness uses <em>progressive disclosure</em> — loading only the tools relevant to the current task. The agent sees 5 focused tools instead of 40. It picks the right one every time.
+      </div>
+    </div>
+  </div>
+  <div class="sc-panel" id="s-amnesia">
+    <div class="comparison">
+      <div class="cmp-box bad">
+        <div class="cmp-label">Without harness</div>
+        Every session starts cold. The agent asks you the same questions again. It doesn't know your team uses Bun, not npm. It doesn't know which directories are off-limits. It relearns everything every time.
+      </div>
+      <div class="cmp-box good">
+        <div class="cmp-label">With harness</div>
+        The harness injects <code>AGENTS.md</code> into every session. Your conventions, past failures, and project context are always available. The agent starts every run knowing your codebase.
+      </div>
+    </div>
+  </div>
+  <div class="sc-panel" id="s-guard">
+    <div class="comparison">
+      <div class="cmp-box bad">
+        <div class="cmp-label">Without harness</div>
+        The agent deletes files, commits to main, exposes API keys in source code, or overwrites generated files. It doesn't mean to — it's just doing what it was asked, without safety constraints.
+      </div>
+      <div class="cmp-box good">
+        <div class="cmp-label">With harness</div>
+        Hooks catch destructive actions before they execute. The sandbox blocks unauthorized network calls. Secrets management keeps tokens out of model context entirely. Safety is structural, not trust-based.
+      </div>
+    </div>
+  </div>
+  <div class="sc-panel" id="s-boiler">
+    <div class="comparison">
+      <div class="cmp-box bad">
+        <div class="cmp-label">Without harness</div>
+        Every new AI feature needs custom session state, secret handling, output parsing, error recovery, and context management. Teams reinvent the same 400 lines of glue code for every agent.
+      </div>
+      <div class="cmp-box good">
+        <div class="cmp-label">With harness</div>
+        A harness framework like Flue ships all of these as structured primitives. You configure, not reinvent. Focus goes to your domain logic — not the plumbing.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 4: THE RATCHET ── -->
+<div class="section-label">Part 4</div>
+<h2>The Ratchet: how a harness gets smarter over time</h2>
+
+<p>Here's one of the most powerful ideas in harness engineering. It's called the <strong>ratchet</strong>.</p>
+
+<p>Every time your agent makes a mistake, you don't just fix it and move on. You encode a rule into the harness so that mistake <em>can never happen again</em>. The ratchet only clicks one way: your harness accumulates failures as permanent constraints.</p>
+
+<p>This is completely different from how most people think about improving AI systems. You don't need a better model. You need a harness that's learned from every failure.</p>
+
+<div class="demo">
+  <div class="demo-header">
+    <div class="demo-title">Demo · The Ratchet Simulator</div>
+  </div>
+  <div class="demo-body">
+    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">Simulate real agent failures below. See each one get encoded permanently into <code>AGENTS.md</code> — the harness's rulebook.</p>
+    <div class="ratchet-wrap">
+      <div class="failure-list">
+        <div style="font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Agent failures</div>
+        <button class="fail-btn" id="r0" onclick="ratchet(0)">Shipped a PR with commented-out tests</button>
+        <button class="fail-btn" id="r1" onclick="ratchet(1)">Ran <code>npm install</code> instead of <code>bun</code></button>
+        <button class="fail-btn" id="r2" onclick="ratchet(2)">Got lost in a 40-step task, stopped early</button>
+        <button class="fail-btn" id="r3" onclick="ratchet(3)">Finished with broken TypeScript types</button>
+        <button class="fail-btn" id="r4" onclick="ratchet(4)">Manually edited a generated file</button>
+        <div class="ratchet-feedback" id="ratchet-feedback">Select a failure to see the ratchet click.</div>
+      </div>
+      <div class="codebox" id="ratchet-codebox">
+        <span class="c-comment"># AGENTS.md</span><br>
+        <span class="c-comment"># Every rule here traces to a real failure.</span><br>
+        <br>
+        <span class="c-comment"># (simulate failures to populate this)</span>
+      </div>
+    </div>
+    <p class="caption">A good AGENTS.md is a pilot's pre-flight checklist — short, specific, every line earned through a past incident. If a line can't be traced to a real failure, it probably shouldn't exist.</p>
+  </div>
+</div>
+
+<!-- ── SECTION 5: HOW HARNESSES EVOLVE ── -->
+<div class="section-label">Part 5</div>
+<h2>How the industry thinks about harnesses now</h2>
+
+<p>Harness thinking has evolved through generations. Click each era below to understand where we came from and where things are headed.</p>
+
+<div class="demo">
+  <div class="demo-header"><div class="demo-title">Demo · The Evolution of Agent Harnesses</div></div>
+  <div class="demo-body">
+    <div class="evolution-steps" id="ev-steps">
+      <div class="ev-step active" onclick="showEra(this, 0)">
+        <div class="es-num">Era 1</div>
+        <div class="es-title">Bare API</div>
+        <div class="es-sub">2022–2023</div>
+      </div>
+      <div class="ev-step" onclick="showEra(this, 1)">
+        <div class="es-num">Era 2</div>
+        <div class="es-title">Agent SDK</div>
+        <div class="es-sub">2023–2024</div>
+      </div>
+      <div class="ev-step" onclick="showEra(this, 2)">
+        <div class="es-num">Era 3</div>
+        <div class="es-title">Harness Framework</div>
+        <div class="es-sub">2024–2025</div>
+      </div>
+      <div class="ev-step" onclick="showEra(this, 3)">
+        <div class="es-num">Era 4</div>
+        <div class="es-title">HaaS</div>
+        <div class="es-sub">2025–now</div>
+      </div>
+    </div>
+    <div class="ev-detail" id="ev-detail">
+      <strong>Era 1 — Bare API:</strong> Teams called the LLM API directly. Got text completions back. Built everything themselves: session state, tool routing, error handling, retries. Lots of reinvention, lots of inconsistency. Every team's agent was completely different.
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ── SECTION 6: FLUE ── -->
+<div class="section-label">Part 6</div>
+<h2>Flue: a harness framework inspired by these ideas</h2>
+
+<p>Addy Osmani (Director of AI at Google Cloud) wrote a viral essay on X formalizing these ideas as "harness engineering." Fred K. Schott (co-creator of Astro) read an early draft and built <a href="https://flueframework.com" target="_blank">Flue</a> as a direct TypeScript implementation of the concepts.</p>
+
+<p>Flue's core bet: the valuable part of an AI agent is the harness — so it should be something you own and can customize, not something you rent from a proprietary SDK.</p>
+
+<table>
+  <thead>
+    <tr><th>Harness Component</th><th>What it does</th><th>In Flue</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Skills</strong></td>
+      <td>Named, reusable capabilities</td>
+      <td class="good">First-class primitive</td>
+    </tr>
+    <tr>
+      <td><strong>Sessions</strong></td>
+      <td>Memory across runs</td>
+      <td class="good">Built-in</td>
+    </tr>
+    <tr>
+      <td><strong>Sandbox</strong></td>
+      <td>Safe code execution</td>
+      <td class="good">Virtual + remote providers</td>
+    </tr>
+    <tr>
+      <td><strong>Secrets</strong></td>
+      <td>Tokens out of model context</td>
+      <td class="good">Structured secrets layer</td>
+    </tr>
+    <tr>
+      <td><strong>Triggers</strong></td>
+      <td>Webhooks, cron, CLI</td>
+      <td class="good">Deploy anywhere</td>
+    </tr>
+    <tr>
+      <td><strong>Model</strong></td>
+      <td>The AI model itself</td>
+      <td class="neutral">Any model — you choose</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ── SECTION 7: GO BUILD ── -->
+<div class="section-label">Part 7 · Now go build</div>
+<h2>Your mental model, and what to do with it</h2>
+
+<p>You now understand what a harness is. Here's how to apply it:</p>
+
+<div class="next-grid">
+  <div class="next-card">
+    <div class="nc-label">Start here</div>
+    <div class="nc-title">Write your AGENTS.md</div>
+    <div class="nc-body">Create a file at the root of your project. Add your team's conventions: which package manager, which directories are off-limits, which patterns to always follow. Start small — 10 lines is enough. Every line should earn its place through a real situation.</div>
+  </div>
+  <div class="next-card">
+    <div class="nc-label">When you hit a failure</div>
+    <div class="nc-title">Apply the ratchet</div>
+    <div class="nc-body">When your agent makes a mistake, ask: "how do I encode this into the harness so it never happens again?" Add a line to AGENTS.md, or a pre-commit hook, or a sandbox rule. Don't just retry — close the gap permanently.</div>
+  </div>
+  <div class="next-card">
+    <div class="nc-label">Building a real agent</div>
+    <div class="nc-title">Try Flue</div>
+    <div class="nc-body">Flue gives you skills, sessions, sandbox, and secrets as structured TypeScript primitives. You focus on your domain logic — what the agent should actually <em>do</em> — rather than the plumbing around it.</div>
+  </div>
+  <div class="next-card">
+    <div class="nc-label">Go deeper</div>
+    <div class="nc-title">Read the source essay</div>
+    <div class="nc-body">Addy Osmani's "Agent Harness Engineering" on X is the best single document on this topic. 830K views, 7,900 bookmarks. Written May 2026. Everything in this explainer is drawn from it.</div>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>The key insight to carry forward:</strong> When your AI agent does something wrong, your first instinct might be "I need a better model." Nine times out of ten, you need a better harness. The model already has the capability — the harness isn't channeling it correctly.
+</div>
+
+<div class="credits">
+  Based on: <a href="https://x.com/addyosmani/status/2053231239721885918" target="_blank">Addy Osmani — "Agent Harness Engineering" (X, May 2026)</a> ·
+  <a href="https://flueframework.com" target="_blank">Flue Framework</a> by Fred K. Schott ·
+  Harness engineering term coined by <a href="https://x.com/Vtrivedy10" target="_blank">@Vtrivedy10</a>
+  <br><br>
+  Built with the interactive-explainer skill for Claude Code.
+</div>
+
+</main>
+
+<aside>
+  <div class="label">Key Terms</div>
+  <dl>
+    <dt>Harness</dt>
+    <dd>The scaffolding around an AI model: prompts, tools, memory, sandbox, hooks. It makes a raw model into a useful, safe agent.</dd>
+
+    <dt>Agent</dt>
+    <dd>An AI model + a harness. The model handles language; the harness handles everything else.</dd>
+
+    <dt>AGENTS.md</dt>
+    <dd>A markdown file read by the agent every turn. Your project's conventions and rules — a checklist, not a style guide.</dd>
+
+    <dt>The Ratchet</dt>
+    <dd>The practice of encoding every agent failure as a permanent harness rule. Mistakes only get fixed forward — never retried and forgotten.</dd>
+
+    <dt>Sandbox</dt>
+    <dd>An isolated execution environment. The agent can run code inside it without risk to your actual system.</dd>
+
+    <dt>Hook</dt>
+    <dd>A script that runs at a lifecycle event (before a commit, after a file edit). Hooks enforce rules structurally, without relying on the model to behave well.</dd>
+
+    <dt>Progressive disclosure</dt>
+    <dd>Loading only the tools the agent needs for the current task, rather than all tools at startup. Prevents tool overwhelm and keeps context lean.</dd>
+
+    <dt>Context rot</dt>
+    <dd>Degraded output quality when a model's context fills with stale information during long tasks.</dd>
+
+    <dt>HaaS</dt>
+    <dd>Harness-as-a-Service. The shift to harness APIs that give you the full runtime — loop, tools, memory, sandbox — out of the box.</dd>
+
+    <dt>Flue</dt>
+    <dd>Open-source TypeScript harness framework. Built by Fred K. Schott after reading an early draft of Addy Osmani's essay on harness engineering.</dd>
+  </dl>
+</aside>
+
+</div><!-- /content -->
+
+<script>
+// ── ANALOGY TOGGLE ──
+function toggleAnalogy(card) {
+  const wasActive = card.classList.contains('active');
+  document.querySelectorAll('.analogy-card').forEach(c => c.classList.remove('active'));
+  if (!wasActive) card.classList.add('active');
+}
+
+// ── BUILD-A-HARNESS ──
+const components = {
+  prompts: {
+    label: '📋 System Prompt + AGENTS.md',
+    cls: 'prompts',
+    cap: 22,
+    msg: 'Now the agent knows your rules. It understands which tools to use, what conventions to follow, and what to avoid — injected into every run automatically.'
+  },
+  memory: {
+    label: '🧠 Session Memory',
+    cls: 'memory',
+    cap: 38,
+    msg: 'The agent can remember work across sessions. It no longer starts from zero every time. Long tasks can resume without re-explaining everything.'
+  },
+  tools: {
+    label: '🔧 Tools & Skills',
+    cls: 'tools',
+    cap: 58,
+    msg: 'The agent can now actually do things: read files, run code, call APIs, write to disk. Without tools, it could only generate text. Now it can act.'
+  },
+  sandbox: {
+    label: '🏖️ Sandbox',
+    cls: 'sandbox',
+    cap: 74,
+    msg: 'Code runs in isolation. The agent can experiment, test, and verify without any risk to your real system. Mistakes stay contained.'
+  },
+  hooks: {
+    label: '🪝 Hooks & Guardrails',
+    cls: 'hooks',
+    cap: 92,
+    msg: '✅ Full agent. Hooks block destructive actions before they happen. The harness enforces your rules structurally — not through trust, but through code.'
+  }
+};
+
+let addedComponents = new Set();
+function addComponent(key) {
+  if (addedComponents.has(key)) return;
+  addedComponents.add(key);
+  const btn = document.getElementById('c-' + key);
+  btn.classList.add('added');
+  const comp = components[key];
+  const container = document.getElementById('layer-container');
+  const div = document.createElement('div');
+  div.className = 'ap-layer ' + comp.cls;
+  div.innerHTML = comp.label;
+  container.appendChild(div);
+  const totalCap = Math.min(12 + Array.from(addedComponents).reduce((s, k) => s + components[k].cap - 12, 0) + 12, 92);
+  const realCap = comp.cap;
+  const fill = document.getElementById('cap-fill');
+  fill.style.width = realCap + '%';
+  fill.textContent = realCap + '%';
+  document.getElementById('build-msg').textContent = comp.msg;
+}
+
+function resetBuild() {
+  addedComponents.clear();
+  document.getElementById('layer-container').innerHTML = '';
+  document.getElementById('cap-fill').style.width = '12%';
+  document.getElementById('cap-fill').textContent = '12%';
+  document.getElementById('build-msg').textContent = 'A bare model: can answer questions but can\'t do much on its own. Add components to unlock real capability.';
+  document.querySelectorAll('.comp-btn').forEach(b => b.classList.remove('added'));
+}
+
+// ── SCENARIO TABS ──
+function showScenario(btn, id) {
+  document.querySelectorAll('.sc-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.sc-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// ── RATCHET ──
+const ratchetRules = [
+  {
+    rule: '<span class="c-heading">## Test discipline</span><br><span class="c-new">Never comment out tests.</span><br><span class="c-new">Delete or fix them. No .skip() in diffs.</span>',
+    feedback: '⟳ Ratchet clicks. Two rules added: one in AGENTS.md, one as a blocking hook on commit. This failure is now structurally impossible.'
+  },
+  {
+    rule: '<span class="c-heading">## Package manager</span><br><span class="c-new">Always use bun, never npm or yarn.</span><br><span class="c-new">If bun isn\'t installed, install it first.</span>',
+    feedback: '⟳ One mistake → one rule. Future agents know from the start. No relearning needed.'
+  },
+  {
+    rule: '<span class="c-heading">## Long tasks (&gt;10 steps)</span><br><span class="c-new">Decompose into planner + executor agents.</span><br><span class="c-new">Write plan.md first. Verify each step.</span>',
+    feedback: '⟳ Structural change. 40-step monolithic runs get split into a planner who maps the work and an executor who does it. No more getting lost.'
+  },
+  {
+    rule: '<span class="c-heading">## Type checking</span><br><span class="c-new">Run tsc --noEmit after every file edit.</span><br><span class="c-new">Stop and fix if errors exist. Don\'t proceed.</span>',
+    feedback: '⟳ A post-edit hook now runs tsc automatically. If types break, the error is fed back into the loop. Success is silent. Failures are verbose.'
+  },
+  {
+    rule: '<span class="c-heading">## Generated files</span><br><span class="c-new">Never manually edit /src/generated/.</span><br><span class="c-new">Re-run codegen to update. Always.</span>',
+    feedback: '⟳ The harness now protects the generated directory. One confused edit → one permanent rule.'
+  }
+];
+
+let ratchetState = [
+  '<span class="c-comment"># AGENTS.md</span>',
+  '<span class="c-comment"># Every rule earned through failure.</span>',
+  ''
+];
+let ratchetDone = new Set();
+
+function ratchet(id) {
+  if (ratchetDone.has(id)) {
+    document.getElementById('ratchet-feedback').textContent = 'Already in the harness.';
+    return;
+  }
+  ratchetDone.add(id);
+  document.getElementById('r' + id).classList.add('done');
+  if (ratchetState.length === 3 && ratchetState[2] === '') ratchetState.splice(2, 1);
+  ratchetState.push(ratchetRules[id].rule);
+  document.getElementById('ratchet-codebox').innerHTML = ratchetState.join('<br>');
+  document.getElementById('ratchet-feedback').innerHTML = ratchetRules[id].feedback;
+}
+
+// ── EVOLUTION ──
+const eras = [
+  '<strong>Era 1 — Bare API (2022–2023):</strong> Teams called the LLM API directly. Got text back. Built everything themselves: session state, tool routing, error handling, retries, output parsing. Every team reinvented the same plumbing. Agents were fragile and inconsistent across projects.',
+  '<strong>Era 2 — Agent SDKs (2023–2024):</strong> Frameworks like LangChain gave you an agent loop and tool abstraction. Less reinvention. But the harness was still a black box — you configured what the framework allowed, not what you needed. Teams hit ceilings fast when their use case didn\'t fit the framework\'s assumptions.',
+  '<strong>Era 3 — Harness Frameworks (2024–2025):</strong> Tools like Flue treat the harness as the primary artifact. Skills, sessions, sandbox, and secrets are named, owned primitives you compose. The model is pluggable. You focus on your domain — the framework handles the runtime. This is where we are now.',
+  '<strong>Era 4 — Harness-as-a-Service / HaaS (2025–now):</strong> The shift from building on LLM APIs (completions) to building on harness APIs (full runtime). The loop, tools, context management, hooks, and sandboxes come out of the box. You configure domain-specific prompts and skills — the infrastructure is solved. Agents start behaving less like prototypes and more like production software.'
+];
+
+function showEra(el, idx) {
+  document.querySelectorAll('.ev-step').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('ev-detail').innerHTML = eras[idx];
+}
+</script>
+
+</body>
+</html>
