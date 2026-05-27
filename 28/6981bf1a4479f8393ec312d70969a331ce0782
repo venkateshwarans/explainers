@@ -1,0 +1,19 @@
+index.html
+  s_f63c20e60bc28d::t_fcae6a851faadb 226-231
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "286981bf1a4479f8393ec312d70969a331ce0782",
+  "prompts": {},
+  "sessions": {
+    "s_f63c20e60bc28d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c8e0cc6e-f89a-43eb-926d-92943be48ad1",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Venkateshwaran Selvaraj <venkateshwaran.s@sarasanalytics.com>"
+    }
+  }
+}
