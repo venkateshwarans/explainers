@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillOpt — an interactive explainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Figtree:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #FAF9F7;
+      --surface:   #FFFFFF;
+      --demo-bg:   #F3F2EE;
+      --text:      #2D2D2D;
+      --text-muted:#666666;
+      --border:    #E5E5E0;
+      --accent:    #6366F1;
+      --accent-bg: #EEF2FF;
+      --good:      #16A34A;
+      --bad:       #DC2626;
+      --warn:      #D97706;
+      --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+      --font-sans:  'Figtree', system-ui, -apple-system, sans-serif;
+      --font-mono:  'Source Code Pro', ui-monospace, Menlo, Consolas, monospace;
+      --radius:     12px;
+      --max-w:      720px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); padding: 56px 24px 120px; color: var(--text); font-family: var(--font-sans); font-size: 17px; line-height: 1.6; }
+
+    .page {
+      max-width: 1060px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 240px;
+      gap: 48px;
+    }
+    @media (max-width: 900px) {
+      .page { grid-template-columns: 1fr; }
+      aside { display: none; }
+    }
+
+    main > * + * { margin-top: 20px; }
+    .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    h1 { font-family: var(--font-serif); font-size: clamp(32px, 5vw, 52px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 12px; }
+    .lead { font-size: 19px; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px; }
+    h2 { font-family: var(--font-serif); font-size: 22px; font-weight: 500; margin-top: 40px; margin-bottom: 12px; }
+    h3 { font-family: var(--font-sans); font-size: 16px; font-weight: 600; margin-top: 24px; margin-bottom: 8px; }
+    p + p { margin-top: 14px; }
+    strong { font-weight: 600; }
+
+    .callout {
+      border: 1.5px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 15px;
+    }
+    .callout b { color: var(--accent); }
+
+    .demo {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 24px;
+      margin: 16px 0;
+    }
+    .demo.tinted { background: var(--demo-bg); }
+    .demo-caption { font-size: 13px; color: var(--text-muted); margin-top: 12px; }
+
+    .controls { font-family: var(--font-sans); font-size: 14px; }
+    .controls .row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .controls label { min-width: 100px; color: var(--text-muted); font-size: 12px; font-family: var(--font-mono); }
+    input[type=range] { flex: 1; accent-color: var(--accent); }
+    .val { font-family: var(--font-mono); font-size: 13px; color: var(--text); min-width: 36px; }
+
+    button {
+      appearance: none; border: 1.5px solid var(--border);
+      background: var(--demo-bg); border-radius: 8px;
+      font-family: var(--font-mono); font-size: 12px;
+      padding: 7px 12px; cursor: pointer; transition: background 0.15s;
+    }
+    button:hover { background: var(--border); }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    button.primary:hover { background: #4f46e5; }
+    button:disabled { opacity: 0.4; cursor: default; }
+
+    table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 16px 0; }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    th { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+    td.good { color: var(--good); font-weight: 600; }
+    td.bad { color: var(--bad); }
+
+    aside {
+      position: sticky; top: 32px; align-self: start;
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); padding: 18px 18px 8px;
+    }
+    aside .label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+    aside dl dt { font-family: var(--font-serif); font-size: 15px; color: var(--text); margin-top: 10px; }
+    aside dl dd { font-size: 13px; color: var(--text-muted); margin: 3px 0 12px; line-height: 1.5; }
+
+    code { font-family: var(--font-mono); font-size: 14px; background: var(--demo-bg); padding: 2px 6px; border-radius: 4px; }
+
+    .skill-doc {
+      background: #1e1e2e; color: #cdd6f4; border-radius: 8px;
+      padding: 16px 18px; font-family: var(--font-mono); font-size: 13px;
+      line-height: 1.7; white-space: pre-wrap; overflow-x: auto;
+      min-height: 120px; position: relative;
+    }
+    .skill-doc .added { background: rgba(22,163,74,0.25); color: #a6e3a1; display: inline; }
+    .skill-doc .removed { background: rgba(220,38,38,0.2); color: #f38ba8; text-decoration: line-through; display: inline; }
+    .skill-doc .heading { color: #89b4fa; font-weight: 600; }
+    .skill-doc .protected { color: #f9e2af; font-style: italic; }
+
+    .score-bar-container { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+    .score-bar-label { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); min-width: 70px; }
+    .score-bar { flex: 1; height: 20px; background: var(--demo-bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .score-bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s ease, background 0.3s; }
+    .score-val { font-family: var(--font-mono); font-size: 13px; min-width: 40px; font-weight: 600; }
+
+    .step-indicator { display: flex; gap: 6px; margin: 12px 0; flex-wrap: wrap; }
+    .step-dot {
+      width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .step-dot.current { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+    .step-dot.accepted { border-color: var(--good); background: #dcfce7; color: var(--good); }
+    .step-dot.rejected { border-color: var(--bad); background: #fef2f2; color: var(--bad); }
+
+    .verdict {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+      margin-left: 8px;
+    }
+    .verdict.pass { background: #dcfce7; color: var(--good); }
+    .verdict.fail { background: #fef2f2; color: var(--bad); }
+
+    .epoch-label {
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+    }
+
+    .analogy-box {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0;
+    }
+    @media (max-width: 600px) { .analogy-box { grid-template-columns: 1fr; } }
+    .analogy-col {
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); padding: 16px;
+    }
+    .analogy-col h4 {
+      font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--accent); margin-bottom: 8px;
+    }
+    .analogy-col p { font-size: 14px; }
+    .analogy-col .row-item { display: flex; align-items: baseline; gap: 8px; margin: 6px 0; font-size: 14px; }
+    .analogy-col .row-item .dl-icon { color: var(--accent); font-weight: 600; }
+
+    .chart-container { position: relative; width: 100%; height: 200px; margin: 12px 0; }
+    .chart-container canvas { width: 100%; height: 100%; }
+
+    .buffer-list {
+      background: var(--demo-bg); border-radius: 8px; padding: 12px 14px;
+      font-size: 13px; margin: 8px 0; max-height: 100px; overflow-y: auto;
+    }
+    .buffer-item { color: var(--bad); font-family: var(--font-mono); font-size: 12px; padding: 2px 0; }
+    .buffer-item::before { content: "✗ "; }
+
+    .btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <main>
+    <div class="eyebrow">Interactive Explainer &middot; AI Agents</div>
+    <h1>SkillOpt: Teaching AI Agents to Get Better at Their Jobs</h1>
+    <p class="lead">What if you could train an AI agent's instruction manual the same way you train a neural network's weights &mdash; with gradients, learning rates, and validation?</p>
+
+    <div class="callout">
+      <b>TL;DR</b> &mdash; SkillOpt treats an AI agent's "skill document" (a short set of written instructions) as something trainable. A separate optimizer model watches the agent attempt tasks, proposes small edits to the instructions, and only keeps edits that actually improve performance on held-out tests. The result: +23 points average accuracy from just 1&ndash;4 accepted text edits.
+    </div>
+
+    <h2>The intuition</h2>
+    <p>Imagine you're coaching a new employee. You hand them a one-page playbook: "Here's how to handle spreadsheet tasks." They try a few tasks, and some go wrong. You watch their mistakes, scribble a couple of corrections on the playbook, and have them try again on <em>different</em> tasks to make sure your edits actually helped.</p>
+    <p>That's SkillOpt. The "employee" is a frozen AI model (it doesn't change). The "playbook" is a short markdown document called a <strong>skill</strong>. And the "coach" is a separate optimizer model that proposes small, bounded text edits &mdash; then checks whether those edits genuinely improved things before committing them.</p>
+    <p>The key insight: you can apply the discipline of deep learning &mdash; learning rates, validation splits, momentum &mdash; to optimizing <em>text</em>, not just numbers.</p>
+
+    <div class="analogy-box">
+      <div class="analogy-col">
+        <h4>Deep learning training</h4>
+        <div class="row-item"><span class="dl-icon">&bull;</span> Training data &rarr; batches</div>
+        <div class="row-item"><span class="dl-icon">&bull;</span> Learning rate limits weight updates</div>
+        <div class="row-item"><span class="dl-icon">&bull;</span> Validation set prevents overfitting</div>
+        <div class="row-item"><span class="dl-icon">&bull;</span> Momentum stabilizes training</div>
+        <div class="row-item"><span class="dl-icon">&bull;</span> Backward pass computes gradients</div>
+      </div>
+      <div class="analogy-col">
+        <h4>SkillOpt</h4>
+        <div class="row-item"><span class="dl-icon">&bull;</span> Task rollouts &rarr; batches</div>
+        <div class="row-item"><span class="dl-icon">&bull;</span> Text budget limits edit count</div>
+        <div class="row-item"><span class="dl-icon">&bull;</span> Held-out gate rejects bad edits</div>
+        <div class="row-item"><span class="dl-icon">&bull;</span> Slow/meta update preserves gains</div>
+        <div class="row-item"><span class="dl-icon">&bull;</span> Reflection over failures proposes edits</div>
+      </div>
+    </div>
+
+    <h2>See it in action</h2>
+    <p>This demo simulates SkillOpt optimizing a skill for a spreadsheet benchmark. Click through each step to watch the skill document evolve. Notice how the validation gate rejects edits that don't help &mdash; and how rejected ideas feed back as "things not to try again."</p>
+
+    <div class="demo" id="main-demo">
+      <div class="epoch-label" id="epoch-label">Epoch 1 &middot; Step 1</div>
+      <div class="step-indicator" id="step-dots"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;">
+        <div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:6px;">SKILL DOCUMENT</div>
+          <div class="skill-doc" id="skill-display"></div>
+        </div>
+        <div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:6px;">PROPOSED EDIT</div>
+          <div class="skill-doc" id="edit-display" style="min-height:80px;"></div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin:10px 0 4px;">VALIDATION RESULT</div>
+          <div class="score-bar-container">
+            <span class="score-bar-label">Current</span>
+            <div class="score-bar"><div class="score-bar-fill" id="current-bar" style="width:0%;background:var(--accent);"></div></div>
+            <span class="score-val" id="current-val">--</span>
+          </div>
+          <div class="score-bar-container">
+            <span class="score-bar-label">Candidate</span>
+            <div class="score-bar"><div class="score-bar-fill" id="candidate-bar" style="width:0%;background:var(--text-muted);"></div></div>
+            <span class="score-val" id="candidate-val">--</span>
+          </div>
+          <div id="verdict-area" style="margin-top:8px;font-size:14px;"></div>
+        </div>
+      </div>
+
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin:14px 0 4px;">REJECTED-EDIT BUFFER</div>
+      <div class="buffer-list" id="buffer-display"><span style="color:var(--text-muted);font-style:italic;font-size:12px;">Empty &mdash; no rejected edits yet</span></div>
+
+      <div class="btn-row">
+        <button id="prev-btn" disabled onclick="prevStep()">&larr; Previous</button>
+        <button id="next-btn" class="primary" onclick="nextStep()">Next step &rarr;</button>
+        <button id="reset-btn" onclick="resetDemo()">Reset</button>
+      </div>
+      <p class="demo-caption">Walk through the optimization loop: the optimizer reflects on failures, proposes bounded edits, and the validation gate decides whether to accept. Rejected edits go into the buffer so they aren't repeated.</p>
+    </div>
+
+    @media (max-width: 700px) {
+    }
+
+    <h2>How it works, step by step</h2>
+
+    <h3>1. The agent tries tasks with its current skill</h3>
+    <p>A "skill" is just a markdown document &mdash; typically 300 to 2,000 tokens &mdash; that gets prepended to the AI model's prompt (or dropped into its workspace as a file). The model itself is <strong>frozen</strong>: its weights never change. Only the skill document changes.</p>
+    <p>The agent runs a batch of tasks (say, 40 spreadsheet problems). Each attempt produces a <strong>trajectory</strong> (the sequence of actions the agent took) and a <strong>score</strong> (0 or 1 &mdash; did it get the right answer?).</p>
+
+    <h3>2. The optimizer reflects on what went wrong</h3>
+    <p>A separate, typically stronger model (the "optimizer") looks at small groups of failures and successes. It asks: "What patterns do the failures share? What are the successes doing right?" This is the text-space equivalent of computing a gradient &mdash; it tells you which direction to push the skill.</p>
+
+    <h3>3. Edits are bounded by a "textual learning rate"</h3>
+    <p>Here's where SkillOpt gets disciplined. The optimizer can't rewrite the whole skill at once. It's limited to a small number of edits per step (the default is 4), using three operations: <strong>add</strong> a rule, <strong>replace</strong> a rule, or <strong>delete</strong> a rule. This budget decays over time (like a learning rate schedule in deep learning), so early epochs make bigger changes and later epochs fine-tune.</p>
+
+    <div class="demo tinted" id="lr-demo">
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:8px;">TEXTUAL LEARNING RATE</div>
+      <div class="controls">
+        <div class="row">
+          <label>Max edits (L<sub>t</sub>)</label>
+          <input type="range" id="lr-slider" min="1" max="8" value="4" step="1">
+          <span class="val" id="lr-val">4</span>
+        </div>
+        <div class="row">
+          <label>Schedule</label>
+          <button id="sched-const" onclick="setSchedule('constant')">Constant</button>
+          <button id="sched-cos" class="primary" onclick="setSchedule('cosine')">Cosine</button>
+          <button id="sched-lin" onclick="setSchedule('linear')">Linear</button>
+        </div>
+      </div>
+      <div class="chart-container"><canvas id="lr-chart"></canvas></div>
+      <p class="demo-caption">The textual learning rate controls how many edits are allowed per step. Cosine decay (default) makes large changes early and fine-tunes later &mdash; just like learning rate schedules in neural network training.</p>
+    </div>
+
+    <h3>4. The validation gate decides</h3>
+    <p>Every proposed edit gets tested on a <strong>held-out selection split</strong> &mdash; tasks the optimizer hasn't seen. If the edited skill scores strictly higher than the current skill, the edit is accepted. If it ties or loses, it's <strong>rejected</strong>. This is the text-space equivalent of early stopping or validation loss &mdash; it prevents overfitting to the training examples.</p>
+
+    <h3>5. Rejected edits become negative feedback</h3>
+    <p>When an edit is rejected, it doesn't just disappear. It goes into a <strong>rejected-edit buffer</strong> &mdash; a list of "things we tried that didn't work." This buffer is shown to the optimizer in future steps, so it doesn't keep proposing the same failed ideas. Think of it like a to-don't list for the coach.</p>
+
+    <h3>6. Epochs end with a slow/meta update</h3>
+    <p>At the end of each epoch (a full pass through the training data), the optimizer zooms out. It compares the skill at the start of the epoch to the skill now, identifies what improved and what regressed, and writes <strong>protected guidance</strong> into a fenced region of the skill. Step-level edits can't overwrite this region &mdash; it acts like momentum in deep learning, preserving the gains across training.</p>
+
+    <h2>Why the discipline matters</h2>
+    <p>Earlier systems for improving agent skills &mdash; like having the model rewrite its own instructions after each failure &mdash; suffer from <strong>unbounded drift</strong>. Without a learning rate, each edit can be arbitrarily large. Without validation gating, you can't tell if an edit actually helped. Without a rejected-edit buffer, the system repeats the same mistakes.</p>
+
+    <div class="demo" id="comparison-demo">
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:10px;">BOUNDED VS UNBOUNDED EDITING</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="primary" id="comp-run" onclick="runComparison()">Run simulation</button>
+        <button onclick="resetComparison()">Reset</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:4px;">UNBOUNDED (no learning rate, no gate)</div>
+          <div class="chart-container" style="height:160px;"><canvas id="unbounded-chart"></canvas></div>
+        </div>
+        <div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:4px;">SKILLOPT (bounded + gated)</div>
+          <div class="chart-container" style="height:160px;"><canvas id="bounded-chart"></canvas></div>
+        </div>
+      </div>
+      <p class="demo-caption">Unbounded editing often improves, then crashes when a bad rewrite undoes previous gains. SkillOpt's validation gate ensures the score only goes up (or stays flat when edits are rejected).</p>
+    </div>
+
+    <h2>The results</h2>
+    <p>SkillOpt was tested across 6 benchmarks, 7 models, and 3 execution environments &mdash; 52 combinations total. It won or tied in <strong>every single one</strong>.</p>
+
+    <table>
+      <thead>
+        <tr><th>Benchmark</th><th>What it tests</th><th>Before</th><th>After</th><th>Gain</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>SearchQA</td><td>Finding answers in search results</td><td>77.7</td><td>87.3</td><td class="good">+9.6</td></tr>
+        <tr><td>SpreadsheetBench</td><td>Using spreadsheet tools</td><td>41.8</td><td>80.7</td><td class="good">+38.9</td></tr>
+        <tr><td>OfficeQA</td><td>Document reasoning</td><td>33.1</td><td>72.1</td><td class="good">+39.0</td></tr>
+        <tr><td>DocVQA</td><td>Reading document images</td><td>78.8</td><td>91.2</td><td class="good">+12.4</td></tr>
+        <tr><td>LiveMath</td><td>Math proofs (multiple choice)</td><td>37.6</td><td>66.9</td><td class="good">+29.3</td></tr>
+        <tr><td>ALFWorld</td><td>Navigating a virtual house</td><td>83.6</td><td>95.5</td><td class="good">+11.9</td></tr>
+        <tr><td style="font-weight:600;">Average</td><td></td><td>58.8</td><td style="font-weight:600;">82.3</td><td class="good" style="font-weight:700;">+23.5</td></tr>
+      </tbody>
+    </table>
+
+    <p>The most striking part: these gains come from just <strong>1 to 4 accepted text edits</strong> on a document that's 300&ndash;2,000 tokens long. The agent model's weights never change. All the improvement lives in a tiny text file.</p>
+
+    <h3>Smaller models benefit the most</h3>
+    <p>SkillOpt gave the biggest boosts to the smallest models. The tiny GPT-5.4-nano gained +26.7 points on average &mdash; nearly doubling its useful accuracy. This makes sense: smaller models have more room to improve from better instructions, just like a less experienced employee benefits more from a well-written playbook.</p>
+
+    <h3>Skills transfer across models and tools</h3>
+    <p>A skill optimized for one model can be dropped into a completely different model &mdash; or even a different execution environment &mdash; and still help. A spreadsheet skill trained inside Codex transferred to Claude Code and gained +59.7 points. The learned rules (like "always inspect the workbook structure before writing formulas") encode general procedures, not tool-specific tricks.</p>
+
+    <h2>What the learned skills look like</h2>
+    <p>The final skill documents are surprisingly short and readable. Here are some real rules SkillOpt discovered:</p>
+
+    <div class="callout" style="font-size:14px;">
+      <div style="margin-bottom:8px;"><strong>SpreadsheetBench:</strong> "Inspect workbook structure and formulas before writing. Output evaluated static values, not formula references."</div>
+      <div style="margin-bottom:8px;"><strong>SearchQA:</strong> "Infer the expected answer type. Choose the shortest canonical entity that matches."</div>
+      <div style="margin-bottom:8px;"><strong>ALFWorld:</strong> "Maintain a visited/frontier ledger. Diversify search strategy after repeated failures."</div>
+      <div><strong>DocVQA:</strong> "Bind each question to the visual row and header. Copy the aligned span exactly."</div>
+    </div>
+    <p>These are the kinds of rules a human expert might write &mdash; but SkillOpt found them automatically through systematic trial and error.</p>
+
+    <h2>Why this matters</h2>
+    <p>Most AI improvement today comes from making models bigger or training them on more data &mdash; both expensive. SkillOpt shows that you can get massive gains by optimizing the <em>instructions</em> instead, after the model is already trained. The training cost is paid once, offline, and the resulting skill file is tiny and portable.</p>
+    <p>This opens a path where organizations could maintain <strong>skill libraries</strong> &mdash; collections of optimized instruction sets for different tasks &mdash; the same way they maintain code libraries today. When a new model comes out, many of the skills would transfer directly.</p>
+
+    <h2>Key trade-offs</h2>
+    <table>
+      <thead><tr><th>Advantage</th><th>Limitation</th></tr></thead>
+      <tbody>
+        <tr><td>No inference-time cost (skill is just a text prefix)</td><td>Requires scored trajectories &mdash; doesn't work for subjective tasks</td></tr>
+        <tr><td>Skill artifacts are tiny and portable</td><td>Training needs rollout compute + optimizer calls</td></tr>
+        <tr><td>Transfers across models and environments</td><td>One skill per domain &mdash; heterogeneous tasks may need multiple</td></tr>
+        <tr><td>Monotonic improvement (validation gate)</td><td>Needs a held-out selection split to validate against</td></tr>
+      </tbody>
+    </table>
+  </main>
+
+  <aside>
+    <div class="label">Key Terms</div>
+    <dl id="gloss">
+      <dt>Skill</dt>
+      <dd>A short markdown document (300&ndash;2,000 tokens) containing instructions for an AI agent. Gets prepended to the prompt or dropped in the workspace.</dd>
+
+      <dt>Frozen model</dt>
+      <dd>An AI model whose internal weights are locked &mdash; it can't learn or change. Only the external skill document changes.</dd>
+
+      <dt>Optimizer model</dt>
+      <dd>A separate AI model (usually stronger) that reads the agent's attempts and proposes edits to the skill.</dd>
+
+      <dt>Rollout</dt>
+      <dd>One complete attempt by the agent to solve a task. Produces a trajectory (action sequence) and a score.</dd>
+
+      <dt>Textual learning rate</dt>
+      <dd>The maximum number of text edits allowed per optimization step. Prevents the optimizer from rewriting everything at once.</dd>
+
+      <dt>Validation gate</dt>
+      <dd>A check on held-out tasks that only accepts edits which strictly improve the score. The text-space equivalent of validation loss.</dd>
+
+      <dt>Rejected-edit buffer</dt>
+      <dd>A running list of edit proposals that failed validation. Shown to the optimizer so it doesn't repeat failed ideas.</dd>
+
+      <dt>Slow/meta update</dt>
+      <dd>An end-of-epoch review that writes protected guidance into the skill. Acts like momentum in neural network training.</dd>
+
+      <dt>Epoch</dt>
+      <dd>One full pass through all training tasks. SkillOpt typically runs 4 epochs.</dd>
+
+      <dt>Trajectory</dt>
+      <dd>The sequence of actions and tool calls an agent makes while attempting a task.</dd>
+    </dl>
+  </aside>
+</div>
+
+<script>
+// ============ MAIN STEP-THROUGH DEMO ============
+
+const simSteps = [
+  {
+    epoch: 1, step: 1,
+    skill: '<span class="heading"># Spreadsheet Skill</span>\nRead the question carefully.\nUse pandas or openpyxl as needed.',
+    edit: '<span class="added">+ ADD: "Before answering, inspect\n  the workbook structure: sheet\n  names, column headers, data\n  types."</span>',
+    currentScore: 41.8, candidateScore: 55.2,
+    accepted: true,
+    reason: 'Agent was guessing without looking at the data first',
+    buffer: null
+  },
+  {
+    epoch: 1, step: 2,
+    skill: '<span class="heading"># Spreadsheet Skill</span>\nRead the question carefully.\nUse pandas or openpyxl as needed.\n<span class="added">Before answering, inspect the\nworkbook structure: sheet names,\ncolumn headers, data types.</span>',
+    edit: '<span class="added">+ ADD: "Always use VLOOKUP\n  instead of manual iteration."</span>',
+    currentScore: 55.2, candidateScore: 52.1,
+    accepted: false,
+    reason: 'VLOOKUP advice hurt cases needing iteration',
+    buffer: ['Forcing VLOOKUP over iteration']
+  },
+  {
+    epoch: 1, step: 3,
+    skill: '<span class="heading"># Spreadsheet Skill</span>\nRead the question carefully.\nUse pandas or openpyxl as needed.\nBefore answering, inspect the\nworkbook structure: sheet names,\ncolumn headers, data types.',
+    edit: '<span class="added">+ ADD: "Output evaluated static\n  values, not formula references.\n  Verify by re-reading the cell."</span>',
+    currentScore: 55.2, candidateScore: 68.7,
+    accepted: true,
+    reason: 'Agent was returning =SUM(...) instead of the actual number',
+    buffer: ['Forcing VLOOKUP over iteration']
+  },
+  {
+    epoch: 2, step: 1,
+    skill: '<span class="heading"># Spreadsheet Skill</span>\nRead the question carefully.\nUse pandas or openpyxl as needed.\nBefore answering, inspect the\nworkbook structure: sheet names,\ncolumn headers, data types.\nOutput evaluated static values,\nnot formula references. Verify\nby re-reading the cell.\n\n<span class="protected">[PROTECTED — epoch 1 guidance]\nStructure-first approach is\nworking. Preserve inspection\nstep. Static values critical.</span>',
+    edit: '<span class="removed">- DELETE: "Read the question\n  carefully."</span>\n<span class="added">+ REPLACE with: "Parse the\n  question to identify: target\n  sheet, target metric, any\n  filters or conditions."</span>',
+    currentScore: 68.7, candidateScore: 74.3,
+    accepted: true,
+    reason: '"Read carefully" was too vague — structured parsing helps',
+    buffer: ['Forcing VLOOKUP over iteration']
+  },
+  {
+    epoch: 2, step: 2,
+    skill: '<span class="heading"># Spreadsheet Skill</span>\nParse the question to identify:\ntarget sheet, target metric,\nany filters or conditions.\nUse pandas or openpyxl as needed.\nBefore answering, inspect the\nworkbook structure: sheet names,\ncolumn headers, data types.\nOutput evaluated static values,\nnot formula references. Verify\nby re-reading the cell.\n\n<span class="protected">[PROTECTED — epoch 1 guidance]\nStructure-first approach is\nworking. Preserve inspection\nstep. Static values critical.</span>',
+    edit: '<span class="added">+ ADD: "For multi-sheet workbooks,\n  cross-reference sheet names\n  against the question before\n  selecting a sheet."</span>',
+    currentScore: 74.3, candidateScore: 74.3,
+    accepted: false,
+    reason: 'Tied score — ties are rejected (strict improvement only)',
+    buffer: ['Forcing VLOOKUP over iteration', 'Cross-referencing sheets (tied, no gain)']
+  },
+  {
+    epoch: 2, step: 3,
+    skill: '<span class="heading"># Spreadsheet Skill</span>\nParse the question to identify:\ntarget sheet, target metric,\nany filters or conditions.\nUse pandas or openpyxl as needed.\nBefore answering, inspect the\nworkbook structure: sheet names,\ncolumn headers, data types.\nOutput evaluated static values,\nnot formula references. Verify\nby re-reading the cell.\n\n<span class="protected">[PROTECTED — epoch 1 guidance]\nStructure-first approach is\nworking. Preserve inspection\nstep. Static values critical.</span>',
+    edit: '<span class="added">+ ADD: "When formulas reference\n  other cells, trace the full\n  dependency chain. Report the\n  final computed number."</span>',
+    currentScore: 74.3, candidateScore: 80.7,
+    accepted: true,
+    reason: 'Agent was missing nested formula dependencies',
+    buffer: ['Forcing VLOOKUP over iteration', 'Cross-referencing sheets (tied, no gain)']
+  }
+];
+
+let currentStep = 0;
+
+function renderStep() {
+  const s = simSteps[currentStep];
+  document.getElementById('epoch-label').textContent = `Epoch ${s.epoch} · Step ${s.step}`;
+  document.getElementById('skill-display').innerHTML = s.skill;
+  document.getElementById('edit-display').innerHTML = s.edit;
+
+  document.getElementById('current-bar').style.width = s.currentScore + '%';
+  document.getElementById('current-bar').style.background = 'var(--accent)';
+  document.getElementById('current-val').textContent = s.currentScore.toFixed(1);
+
+  document.getElementById('candidate-bar').style.width = s.candidateScore + '%';
+  document.getElementById('candidate-bar').style.background = s.accepted ? 'var(--good)' : 'var(--bad)';
+  document.getElementById('candidate-val').textContent = s.candidateScore.toFixed(1);
+
+  const va = document.getElementById('verdict-area');
+  if (s.accepted) {
+    va.innerHTML = `<span class="verdict pass">ACCEPTED</span> <span style="font-size:13px;color:var(--text-muted);">${s.reason}</span>`;
+  } else {
+    va.innerHTML = `<span class="verdict fail">REJECTED</span> <span style="font-size:13px;color:var(--text-muted);">${s.reason}</span>`;
+  }
+
+  const buf = document.getElementById('buffer-display');
+  if (s.buffer && s.buffer.length > 0) {
+    buf.innerHTML = s.buffer.map(b => `<div class="buffer-item">${b}</div>`).join('');
+  } else {
+    buf.innerHTML = '<span style="color:var(--text-muted);font-style:italic;font-size:12px;">Empty — no rejected edits yet</span>';
+  }
+
+  // Step dots
+  const dots = document.getElementById('step-dots');
+  dots.innerHTML = '';
+  for (let i = 0; i < simSteps.length; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'step-dot';
+    if (i === currentStep) dot.classList.add('current');
+    else if (i < currentStep) dot.classList.add(simSteps[i].accepted ? 'accepted' : 'rejected');
+    dot.textContent = i + 1;
+    dots.appendChild(dot);
+  }
+
+  document.getElementById('prev-btn').disabled = currentStep === 0;
+  document.getElementById('next-btn').disabled = currentStep === simSteps.length - 1;
+}
+
+function nextStep() { if (currentStep < simSteps.length - 1) { currentStep++; renderStep(); } }
+function prevStep() { if (currentStep > 0) { currentStep--; renderStep(); } }
+function resetDemo() { currentStep = 0; renderStep(); }
+
+renderStep();
+
+// ============ LEARNING RATE CHART ============
+
+let lrSchedule = 'cosine';
+const lrSlider = document.getElementById('lr-slider');
+const lrValEl = document.getElementById('lr-val');
+
+function setSchedule(s) {
+  lrSchedule = s;
+  ['const','cos','lin'].forEach(n => document.getElementById('sched-'+n).classList.remove('primary'));
+  document.getElementById('sched-' + (s === 'constant' ? 'const' : s === 'cosine' ? 'cos' : 'lin')).classList.add('primary');
+  drawLrChart();
+}
+
+lrSlider.oninput = () => { lrValEl.textContent = lrSlider.value; drawLrChart(); };
+
+function drawLrChart() {
+  const canvas = document.getElementById('lr-chart');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
+
+  ctx.clearRect(0, 0, w, h);
+  const maxLt = parseInt(lrSlider.value);
+  const minLt = 2;
+  const steps = 40;
+  const pad = { t: 10, r: 10, b: 28, l: 32 };
+
+  // Axes
+  ctx.strokeStyle = '#E5E5E0';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b);
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#666';
+  ctx.font = '10px Source Code Pro, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Step', w / 2, h - 4);
+  ctx.save();
+  ctx.translate(10, h / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Edits', 0, 0);
+  ctx.restore();
+
+  // Y ticks
+  ctx.textAlign = 'right';
+  for (let y = 0; y <= 8; y += 2) {
+    const py = pad.t + (1 - y / 8) * (h - pad.t - pad.b);
+    ctx.fillText(y, pad.l - 4, py + 3);
+    if (y > 0) {
+      ctx.strokeStyle = '#f0f0ec';
+      ctx.beginPath(); ctx.moveTo(pad.l, py); ctx.lineTo(w - pad.r, py); ctx.stroke();
+    }
+  }
+
+  // Compute schedule
+  const vals = [];
+  for (let i = 0; i < steps; i++) {
+    const t = i / (steps - 1);
+    let lt;
+    if (lrSchedule === 'constant') lt = maxLt;
+    else if (lrSchedule === 'linear') lt = maxLt - (maxLt - minLt) * t;
+    else lt = minLt + (maxLt - minLt) * 0.5 * (1 + Math.cos(Math.PI * t)); // cosine
+    vals.push(Math.max(minLt, lt));
+  }
+
+  // Draw
+  ctx.strokeStyle = '#6366F1';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let i = 0; i < steps; i++) {
+    const x = pad.l + (i / (steps - 1)) * (w - pad.l - pad.r);
+    const y = pad.t + (1 - vals[i] / 8) * (h - pad.t - pad.b);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Fill
+  ctx.lineTo(pad.l + (w - pad.l - pad.r), h - pad.b);
+  ctx.lineTo(pad.l, h - pad.b);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(99,102,241,0.08)';
+  ctx.fill();
+}
+
+setTimeout(drawLrChart, 100);
+window.addEventListener('resize', drawLrChart);
+
+// ============ COMPARISON DEMO ============
+
+let compAnimId = null;
+let compFrame = 0;
+
+function generateCompData() {
+  const unbounded = [41.8];
+  const bounded = [41.8];
+  const rng = (seed) => { let s = seed; return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; }; };
+  const r1 = rng(42), r2 = rng(99);
+
+  for (let i = 1; i < 25; i++) {
+    // Unbounded: volatile, can crash
+    const uDelta = (r1() - 0.35) * 18;
+    unbounded.push(Math.max(20, Math.min(95, unbounded[i-1] + uDelta)));
+    // Bounded: monotonic (with some flat steps for rejections)
+    const bDelta = r2() > 0.35 ? r2() * 8 + 1 : 0;
+    bounded.push(Math.min(82, bounded[i-1] + bDelta));
+  }
+  return { unbounded, bounded };
+}
+
+const compData = generateCompData();
+
+function drawCompChart(canvasId, data, maxFrame, color) {
+  const canvas = document.getElementById(canvasId);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
+  const pad = { t: 8, r: 8, b: 24, l: 30 };
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Axes
+  ctx.strokeStyle = '#E5E5E0'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h-pad.b); ctx.lineTo(w-pad.r, h-pad.b); ctx.stroke();
+
+  ctx.fillStyle = '#999'; ctx.font = '9px Source Code Pro, monospace'; ctx.textAlign = 'right';
+  [20,40,60,80].forEach(v => {
+    const y = pad.t + (1 - (v-20)/80) * (h-pad.t-pad.b);
+    ctx.fillText(v, pad.l-3, y+3);
+  });
+
+  const n = Math.min(maxFrame, data.length);
+  if (n < 2) return;
+
+  ctx.strokeStyle = color; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const x = pad.l + (i / (data.length-1)) * (w-pad.l-pad.r);
+    const y = pad.t + (1 - (data[i]-20)/80) * (h-pad.t-pad.b);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Dot on last point
+  const lx = pad.l + ((n-1) / (data.length-1)) * (w-pad.l-pad.r);
+  const ly = pad.t + (1 - (data[n-1]-20)/80) * (h-pad.t-pad.b);
+  ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI*2); ctx.fillStyle = color; ctx.fill();
+}
+
+function animateComparison() {
+  compFrame++;
+  drawCompChart('unbounded-chart', compData.unbounded, compFrame, '#DC2626');
+  drawCompChart('bounded-chart', compData.bounded, compFrame, '#16A34A');
+  if (compFrame < 25) compAnimId = requestAnimationFrame(animateComparison);
+}
+
+function runComparison() {
+  if (compAnimId) cancelAnimationFrame(compAnimId);
+  compFrame = 0;
+  animateComparison();
+}
+
+function resetComparison() {
+  if (compAnimId) cancelAnimationFrame(compAnimId);
+  compFrame = 1;
+  drawCompChart('unbounded-chart', compData.unbounded, 1, '#DC2626');
+  drawCompChart('bounded-chart', compData.bounded, 1, '#16A34A');
+}
+
+setTimeout(() => {
+  drawCompChart('unbounded-chart', compData.unbounded, 1, '#DC2626');
+  drawCompChart('bounded-chart', compData.bounded, 1, '#16A34A');
+}, 150);
+window.addEventListener('resize', () => {
+  drawCompChart('unbounded-chart', compData.unbounded, compFrame || 1, '#DC2626');
+  drawCompChart('bounded-chart', compData.bounded, compFrame || 1, '#16A34A');
+});
+
+// Fix mobile grid collapse for the main demo
+const style = document.createElement('style');
+style.textContent = '@media(max-width:700px){#main-demo [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important;} #comparison-demo [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important;}}';
+document.head.appendChild(style);
+</script>
+</body>
+</html>
