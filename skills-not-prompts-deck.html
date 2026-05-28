@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code Skills — Slide Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --slide-bg:      #FAFAF8;
+      --surface:       #FFFFFF;
+      --surface-2:     #E4E3F3;
+      --text:          #1A1A1A;
+      --text-muted:    #4B5563;
+      --border:        #C8C6E0;
+      --accent:        #3F3DE2;
+      --accent-bg:     #EEEDF9;
+      --accent-warm:   #E8601C;
+      --good:          #16A34A;
+      --bad:           #DC2626;
+      --warn:          #D97706;
+      --font-serif:    'Playfair Display', Georgia, serif;
+      --font-sans:     'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono:     'JetBrains Mono', ui-monospace, Menlo, monospace;
+      --radius:        12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--slide-bg); font-family: var(--font-sans); color: var(--text); }
+
+    .deck { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+
+    .slide {
+      position: relative; height: 100vh; min-height: 100vh; scroll-snap-align: start;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 72px 80px 64px; overflow: hidden;
+    }
+    @media (max-width: 768px) { .slide { padding: 56px 24px 40px; } }
+
+    .slide-logo { position: absolute; top: 28px; left: 36px; opacity: 0.85; z-index: 10; }
+    .eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+    .accent { color: var(--accent); }
+    .accent-warm { color: var(--accent-warm); }
+    code.inline { font-family: var(--font-mono); color: var(--accent); background: var(--accent-bg); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+
+    .slide-title h1 { font-family: var(--font-serif); font-size: clamp(36px, 6vw, 68px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; margin: 16px 0 24px; }
+    .slide-title .lead { font-size: 20px; color: var(--text-muted); max-width: 620px; line-height: 1.55; }
+    .slide-title .meta { display: flex; gap: 12px; margin-top: 40px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+
+    .slide-content h2 { font-family: var(--font-serif); font-size: clamp(26px, 4vw, 44px); font-weight: 600; letter-spacing: -0.02em; margin: 10px 0 28px; }
+
+    .bullets { list-style: none; display: flex; flex-direction: column; gap: 20px; }
+    .bullets li { display: flex; flex-direction: column; gap: 4px; padding-left: 20px; border-left: 3px solid var(--accent); }
+    .bullet-title { font-size: 18px; font-weight: 600; }
+    .bullet-sub { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+    /* Quote */
+    .quote-block { border-left: 4px solid var(--accent-warm); padding: 14px 22px; margin: 20px 0; background: #FFF7ED; border-radius: 0 var(--radius) var(--radius) 0; max-width: 640px; }
+    .quote-block p { font-size: 16px; font-style: italic; line-height: 1.55; color: var(--text); }
+    .quote-block .attr { font-size: 12px; color: var(--text-muted); font-style: normal; margin-top: 6px; }
+
+    /* Callout / side note */
+    .callout {
+      display: inline-flex; align-items: flex-start; gap: 10px;
+      background: var(--accent-bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px 16px; margin-top: 6px; max-width: 680px;
+    }
+    .callout-icon { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+    .callout-body { font-size: 14px; color: var(--text-muted); line-height: 1.55; }
+    .callout-body strong { color: var(--text); }
+
+    /* Principles */
+    .principle-list { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; max-width: 720px; }
+    .principle { display: flex; gap: 14px; align-items: flex-start; }
+    .principle-num { font-family: var(--font-serif); font-size: 28px; font-weight: 700; color: var(--accent); line-height: 1; min-width: 32px; }
+    .principle-body { display: flex; flex-direction: column; gap: 3px; }
+    .principle-title { font-size: 16px; font-weight: 600; }
+    .principle-sub { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+    /* Evolution: 3-stage */
+    .evo-container { margin-top: 16px; }
+    .evo-stages { display: flex; gap: 0; margin-bottom: 16px; }
+    .evo-stage-btn {
+      flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); background: var(--surface);
+      cursor: pointer; text-align: center; font-family: var(--font-sans); font-size: 13px; color: var(--text-muted);
+      transition: all 250ms; position: relative;
+    }
+    .evo-stage-btn:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+    .evo-stage-btn:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+    .evo-stage-btn.active { background: var(--accent); color: white; border-color: var(--accent); font-weight: 600; }
+    .evo-stage-btn .evo-step-num { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 2px; opacity: 0.8; }
+
+    .evo-panel { display: none; }
+    .evo-panel.active { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 768px) { .evo-panel.active { grid-template-columns: 1fr; } }
+    .evo-file { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .evo-file-header { padding: 8px 14px; background: var(--surface-2); font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    .evo-file-body { padding: 12px 14px; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; color: var(--text-muted); white-space: pre-wrap; max-height: 260px; overflow-y: auto; }
+    .evo-file-body .hl { color: var(--accent); font-weight: 500; }
+    .evo-file-body .hlw { color: var(--accent-warm); font-weight: 500; }
+    .evo-file-body .new { background: #dcfce7; color: var(--good); }
+    .evo-verdict { display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+    .evo-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .evo-badge.ref { background: #FFF7ED; color: var(--accent-warm); }
+    .evo-badge.almost { background: #FFFBEB; color: var(--warn); }
+    .evo-badge.skill { background: #f0fdf4; color: var(--good); }
+    .evo-verdict p { font-size: 14px; line-height: 1.55; color: var(--text); }
+    .evo-verdict .test { font-size: 12px; color: var(--text-muted); line-height: 1.5; padding: 8px 12px; background: var(--surface-2); border-radius: 8px; }
+    .evo-verdict .test strong { color: var(--text); }
+
+    /* Skill explorer */
+    .skill-explorer { display: grid; grid-template-columns: 200px 1fr; gap: 0; margin-top: 16px; border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; height: 400px; }
+    @media (max-width: 768px) { .skill-explorer { grid-template-columns: 1fr; height: auto; } }
+    .skill-tabs { display: flex; flex-direction: column; border-right: 1.5px solid var(--border); background: var(--surface-2); }
+    .skill-tab {
+      padding: 14px 16px; cursor: pointer; border: none; background: none; text-align: left;
+      border-bottom: 1px solid var(--border); transition: all 200ms; font-family: var(--font-sans); font-size: 13px; color: var(--text-muted);
+    }
+    .skill-tab:hover { background: var(--surface); color: var(--text); }
+    .skill-tab.active { background: var(--surface); color: var(--accent); font-weight: 600; border-left: 3px solid var(--accent); }
+    .skill-tab .tab-name { font-family: var(--font-mono); font-size: 12px; display: block; }
+    .skill-tab .tab-desc { font-size: 12px; margin-top: 2px; display: block; color: var(--text-muted); }
+    .skill-panel { padding: 20px 24px; overflow-y: auto; }
+    .skill-panel .panel-title { font-family: var(--font-mono); font-size: 14px; color: var(--accent); margin-bottom: 10px; }
+    .skill-panel .panel-oneliner { font-size: 14px; color: var(--text); line-height: 1.55; margin-bottom: 14px; }
+    .skeleton-block { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-family: var(--font-mono); font-size: 12px; line-height: 1.65; color: var(--text-muted); white-space: pre-wrap; overflow-x: auto; }
+    .skeleton-block .sk-key { color: var(--accent); font-weight: 500; }
+    .skeleton-block .sk-section { color: var(--accent-warm); font-weight: 500; }
+
+    /* Flywheel */
+    .flywheel { display: flex; align-items: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+    .flywheel-step { background: var(--accent-bg); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--accent); text-align: center; }
+    .flywheel-arrow { font-size: 18px; color: var(--text-muted); }
+
+    /* Directory tree */
+    .dir-tree { font-family: var(--font-mono); font-size: 13px; line-height: 1.7; color: var(--text-muted); background: #1A1D27; color: #C9CCD6; padding: 14px 18px; border-radius: var(--radius); margin-bottom: 10px; white-space: pre; }
+    .dir-tree .dt-folder { color: #A5B4FC; font-weight: 500; }
+    .dir-tree .dt-file { color: #E2E8F0; }
+    .dir-tree .dt-comment { color: #6B7280; }
+    .dir-tree .dt-required { color: #34D399; }
+    .dir-tree .dt-ref { color: #FBBF24; }
+
+    /* Ecosystem logos */
+    .eco-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; align-items: center; }
+    .eco-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; font-size: 13px; color: var(--text-muted); background: var(--surface); }
+    .eco-pill strong { color: var(--text); font-weight: 500; }
+
+    /* Meta card */
+    .meta-card { border: 2px solid var(--accent); border-radius: var(--radius); background: var(--accent-bg); padding: 20px 24px; max-width: 660px; margin-top: 20px; }
+    .meta-card .meta-label { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .meta-skeleton { font-family: var(--font-mono); font-size: 12px; line-height: 1.6; color: var(--text-muted); white-space: pre-wrap; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+    .meta-skeleton .sk-key { color: var(--accent); font-weight: 500; }
+    .meta-skeleton .sk-section { color: var(--accent-warm); font-weight: 500; }
+
+    /* Nav chrome */
+    .slide-counter { position: fixed; bottom: 24px; right: 32px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); letter-spacing: 0.05em; z-index: 100; }
+    .slide-dots { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 100; }
+    .slide-dots .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); cursor: pointer; transition: background 200ms, transform 200ms; }
+    .slide-dots .dot.active { background: var(--accent); transform: scale(1.4); }
+    .nav-arrow {
+      position: fixed; top: 50%; transform: translateY(-50%); background: none;
+      border: 1.5px solid var(--border); border-radius: 50%; width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      color: var(--text-muted); font-size: 18px; z-index: 100; transition: border-color 150ms, color 150ms;
+    }
+    .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-arrow.prev { left: 20px; }
+    .nav-arrow.next { right: 20px; }
+  </style>
+</head>
+<body>
+
+<div class="deck">
+
+  <!-- ==================== SLIDE 1: TITLE ==================== -->
+  <article class="slide slide-title">
+    <div class="slide-logo"><img src="https://cdn.prod.website-files.com/67481eccf2e8301c5e603202/67624379672c91fd72b6b25e_Saras-logo.svg" alt="Saras" height="28"></div>
+    <div class="eyebrow">DEMO &middot; MAY 2026</div>
+    <h1>Skills,<br><span class="accent">Not Prompts</span></h1>
+    <p class="lead">A skill is a workflow, not a document. Here's what that means, why it matters, and the skills I use every day.</p>
+    <div class="meta" style="margin-top:32px;"><span>9 slides</span><span>&middot;</span><span>~10 min</span></div>
+    <div style="position:absolute;bottom:64px;right:80px;text-align:right;"><span style="font-size:40px;font-weight:600;color:var(--text);display:block;">Venkat</span><span style="font-size:30px;color:var(--text-muted);font-weight:400;">Engineering Team</span></div>
+  </article>
+
+  <!-- ==================== SLIDE 2: WHAT IS A SKILL ==================== -->
+  <article class="slide slide-content">
+    <div class="slide-logo"><img src="https://cdn.prod.website-files.com/67481eccf2e8301c5e603202/67624379672c91fd72b6b25e_Saras-logo.svg" alt="Saras" height="28"></div>
+    <div class="eyebrow">THE CORE IDEA</div>
+    <h2>A skill is a <span class="accent">workflow</span>, not a document</h2>
+
+    <ul class="bullets">
+      <li>
+        <span class="bullet-title">A skill tells Claude <em>how to do</em> something, step by step</span>
+        <span class="bullet-sub">Not what good looks like. Not principles. Actual steps with checkpoints and evidence.</span>
+      </li>
+      <li>
+        <span class="bullet-title">It lives as a markdown file, invoked with a slash command</span>
+        <span class="bullet-sub">Type <code class="inline">/pr-sweep</code> and Claude knows which tools to call, in what order, and what output to produce.</span>
+      </li>
+      <li>
+        <span class="bullet-title">The purpose is execution, not information</span>
+        <span class="bullet-sub">The default behavior of any AI agent is to take the shortest path to done. Skills make the invisible work mandatory.</span>
+      </li>
+    </ul>
+  </article>
+
+  <!-- ==================== SLIDE 3: ANATOMY ==================== -->
+  <article class="slide slide-content">
+    <div class="slide-logo"><img src="https://cdn.prod.website-files.com/67481eccf2e8301c5e603202/67624379672c91fd72b6b25e_Saras-logo.svg" alt="Saras" height="28"></div>
+    <div class="eyebrow">ANATOMY</div>
+    <h2>Five parts of a <span class="accent">well-built</span> skill</h2>
+    <div class="principle-list">
+      <div class="principle">
+        <span class="principle-num">1</span>
+        <div class="principle-body">
+          <span class="principle-title">Trigger &amp; description</span>
+          <span class="principle-sub">The slash command and when to activate. Also: when <em>not</em> to use it.</span>
+        </div>
+      </div>
+      <div class="principle">
+        <span class="principle-num">2</span>
+        <div class="principle-body">
+          <span class="principle-title">Numbered steps &mdash; process over prose</span>
+          <span class="principle-sub">Imperative instructions the agent executes in order. "Run <code class="inline">gh pr diff</code>" &mdash; not "reviewing PRs is important."</span>
+        </div>
+      </div>
+      <div class="principle">
+        <span class="principle-num">3</span>
+        <div class="principle-body">
+          <span class="principle-title">Output format &amp; destination</span>
+          <span class="principle-sub">HTML report? GitHub review with inline comments? Slack message? Specify so output is consistent every time.</span>
+        </div>
+      </div>
+      <div class="principle">
+        <span class="principle-num">4</span>
+        <div class="principle-body">
+          <span class="principle-title">Exit criteria</span>
+          <span class="principle-sub">Concrete evidence the work is done &mdash; not "tests pass," but "save test output showing 0 failures."</span>
+        </div>
+      </div>
+      <div class="principle">
+        <span class="principle-num">5</span>
+        <div class="principle-body">
+          <span class="principle-title">Anti-rationalization table</span>
+          <span class="principle-sub">Pre-written rebuttals to excuses the agent hasn't told yet.</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+      <div class="callout" style="flex:1;min-width:280px;">
+        <span class="callout-icon">&#9679;</span>
+        <div class="callout-body">
+          <strong>What are Exit Criteria?</strong><br>
+          The proof that work is actually done. Not "I think it works" but artifacts you can verify: a test log with 0 failures, a committed file, a posted GitHub review. Every skill must end with evidence, not claims. Agents grading their own work have positive bias &mdash; exit criteria keep them honest.
+        </div>
+      </div>
+      <div class="callout" style="flex:1;min-width:280px;">
+        <span class="callout-icon">&#9679;</span>
+        <div class="callout-body">
+          <strong>What is Anti-Rationalization?</strong><br>
+          LLMs will produce a plausible-sounding paragraph explaining why <em>this particular</em> task doesn't need a spec, or tests, or review. The table pre-empts these excuses. Example: "I'll write tests later" &rarr; "Later is the load-bearing word. There is no later."
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ==================== SLIDE 4: DOCUMENT → SKILL EVOLUTION ==================== -->
+  <article class="slide slide-content">
+    <div class="slide-logo"><img src="https://cdn.prod.website-files.com/67481eccf2e8301c5e603202/67624379672c91fd72b6b25e_Saras-logo.svg" alt="Saras" height="28"></div>
+    <div class="eyebrow">REAL EXAMPLE &middot; CLICK EACH STAGE</div>
+    <h2>When a document <span class="accent-warm">becomes</span> a skill</h2>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:4px;max-width:640px;line-height:1.5;">My <code class="inline">team-directory</code> evolved through three stages. Click each to see the transformation &mdash; and the litmus test that separates a document from a skill.</p>
+
+    <div class="evo-container">
+      <div class="evo-stages">
+        <button class="evo-stage-btn active" onclick="showEvo(0)">
+          <span class="evo-step-num">Stage 1</span>
+          Raw Lookup Table
+        </button>
+        <button class="evo-stage-btn" onclick="showEvo(1)">
+          <span class="evo-step-num">Stage 2</span>
+          Reference Document
+        </button>
+        <button class="evo-stage-btn" onclick="showEvo(2)">
+          <span class="evo-step-num">Stage 3</span>
+          Executable Skill
+        </button>
+      </div>
+
+      <!-- Stage 1: Raw table -->
+      <div class="evo-panel active" id="evo-0">
+        <div class="evo-file">
+          <div class="evo-file-header">team-directory.md</div>
+          <div class="evo-file-body"><span class="hl"># Team Directory</span>
+
+| Name       | Slack ID      | GitHub           |
+|------------|---------------|------------------|
+| Venkat     | U067BCU0GHE   | venkateshwarans  |
+| Anusha     | U07QGKBFW4X   | anusha-saras     |
+| Waheed     | U06V50U1308   | waheeddar05      |
+| Abhiram    | U07UPNFRF6W   | abhiram90        |
+| Jigar      | U07M3P5E2SK   | jigar1909        |
+| Pratishtha | U06UUSAL2NM   | Pratishtha345    |
+| ...28 members total                         |</div>
+        </div>
+        <div class="evo-verdict">
+          <div><span class="evo-badge ref">Just Data</span></div>
+          <p>A flat table of names and IDs. Useful to a human who knows what to do with it, but an agent has <strong>no instructions</strong> on what to do. It will grab a value and move on.</p>
+          <div class="test"><strong>Checklist test:</strong> Can a human follow this as a step-by-step checklist? <strong>No.</strong> There are no steps. It's a spreadsheet.</div>
+        </div>
+      </div>
+
+      <!-- Stage 2: Reference doc -->
+      <div class="evo-panel" id="evo-1">
+        <div class="evo-file">
+          <div class="evo-file-header">team-directory/index.md</div>
+          <div class="evo-file-body"><span class="hl">---
+name: team-directory
+description: Maps Slack &harr; GitHub identities
+---</span>
+
+# Team Directory
+
+<span class="hlw">## Overview</span>
+A lookup table mapping 28 Saras team members
+between Slack User IDs, DM Channel IDs,
+and GitHub usernames.
+
+<span class="hlw">## When to Use</span>
+- Resolving a Slack user to GitHub username
+- Tagging the correct person on a PR
+- Sending a Slack message to a team member
+
+<span class="hlw">## When NOT to Use</span>
+- Looking up people outside Saras team
+- Finding email addresses (not stored)
+
+| Name       | Slack ID    | DM Channel  | GitHub       |
+|------------|-------------|-------------|--------------|
+| Venkat     | U067BCU...  | D066ND8...  | venkatesh... |
+| ...</div>
+        </div>
+        <div class="evo-verdict">
+          <div><span class="evo-badge almost">Better, But Still a Document</span></div>
+          <p>Now it has metadata, "When to Use," and structure. But it still has <strong>no steps, no exit criteria, no guardrails</strong>. It describes <em>when</em> to use the data, but not <em>how</em>. The agent reads it as context, not as a workflow.</p>
+          <div class="test"><strong>Checklist test:</strong> Can a human follow this as a step-by-step checklist? <strong>Still no.</strong> "When to use" is guidance, not a process.</div>
+        </div>
+      </div>
+
+      <!-- Stage 3: Skill -->
+      <div class="evo-panel" id="evo-2">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="dir-tree"><span class="dt-folder">resolve-team-member/</span>
+├── <span class="dt-file">SKILL.md</span>          <span class="dt-required"># Workflow: steps, exit criteria, guardrails</span>
+├── <span class="dt-folder">references/</span>
+│   └── <span class="dt-file">directory.md</span>  <span class="dt-ref"># The team lookup table (data stays here)</span>
+└── <span class="dt-folder">scripts/</span>          <span class="dt-comment"># Optional: helper scripts</span></div>
+          <div class="evo-file" style="max-height:210px;">
+            <div class="evo-file-header">resolve-team-member/SKILL.md</div>
+            <div class="evo-file-body" style="max-height:170px;"><span class="hl">---
+name: resolve-team-member
+description: Resolve cross-platform identity
+  and take action (tag, notify, assign)
+---</span>
+
+<span class="hlw">## Steps</span>
+<span class="hl">1.</span> Identify the person from context
+   (PR author, Slack sender, name mention)
+<span class="hl">2.</span> Look up their row in <span class="new">references/directory.md</span>
+<span class="hl">3.</span> Determine the target platform
+   GitHub? Slack? Both?
+<span class="hl">4.</span> Execute the action:
+   <span class="new">&bull; GitHub &rarr; tag @username on PR</span>
+   <span class="new">&bull; Slack &rarr; send DM via channel ID</span>
+<span class="hl">5.</span> Confirm action was taken
+
+<span class="hlw">## Exit Criteria</span>
+<span class="new">- Person tagged or notified on platform</span>
+<span class="new">- Link to comment/message as evidence</span>
+
+<span class="hlw">## Anti-Rationalization</span>
+<span class="new">"I'll just use the GitHub username"
+&rarr; Names don't always match. Always look up.</span></div>
+          </div>
+        </div>
+        <div class="evo-verdict">
+          <div><span class="evo-badge skill">Now It's a Skill</span></div>
+          <p>The team table didn't disappear &mdash; it moved to <strong>references/directory.md</strong>. The data is still there, but now it's <em>wrapped in a workflow</em>. SKILL.md tells the agent <em>how</em> to use the data: identify, look up, decide, act, confirm.</p>
+          <div class="test"><strong>Checklist test:</strong> Can a human follow this as a step-by-step checklist? <strong>Yes.</strong> Identify &rarr; look up &rarr; decide platform &rarr; execute &rarr; confirm. That's a workflow.</div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ==================== SLIDE 5: SKILL EXPLORER ==================== -->
+  <article class="slide slide-content">
+    <div class="slide-logo"><img src="https://cdn.prod.website-files.com/67481eccf2e8301c5e603202/67624379672c91fd72b6b25e_Saras-logo.svg" alt="Saras" height="28"></div>
+    <div class="eyebrow">MY TOP SKILLS &middot; CLICK TO EXPLORE</div>
+    <h2>Inside the skills I use <span class="accent">every day</span></h2>
+
+    <div class="skill-explorer">
+      <div class="skill-tabs">
+        <button class="skill-tab active" onclick="showSkill(0)">
+          <span class="tab-name">/pr-sweep</span>
+          <span class="tab-desc">End-to-end PR review pipeline</span>
+        </button>
+        <button class="skill-tab" onclick="showSkill(1)">
+          <span class="tab-name">/review-as-ajay</span>
+          <span class="tab-desc">Team quality standards</span>
+        </button>
+        <button class="skill-tab" onclick="showSkill(2)">
+          <span class="tab-name">/save-conversation</span>
+          <span class="tab-desc">Archive decisions to GitHub</span>
+        </button>
+        <button class="skill-tab" onclick="showSkill(3)">
+          <span class="tab-name">/interactive-explainer</span>
+          <span class="tab-desc">Teach concepts with demos</span>
+        </button>
+      </div>
+      <div class="skill-panel" id="skill-panel"></div>
+    </div>
+  </article>
+
+  <!-- ==================== SLIDE 6: SKILLS COMPOUND ==================== -->
+  <article class="slide slide-content">
+    <div class="slide-logo"><img src="https://cdn.prod.website-files.com/67481eccf2e8301c5e603202/67624379672c91fd72b6b25e_Saras-logo.svg" alt="Saras" height="28"></div>
+    <div class="eyebrow">THE BIGGER PICTURE</div>
+    <h2>Skills <span class="accent">compound</span></h2>
+    <p style="font-size:15px;color:var(--text-muted);max-width:640px;line-height:1.55;margin-bottom:2px;">Each skill I build makes the next one more powerful. They compose into pipelines.</p>
+
+    <div class="flywheel">
+      <div class="flywheel-step">Dev raises PR<br>on GitHub</div>
+      <span class="flywheel-arrow">&rarr;</span>
+      <div class="flywheel-step"><strong>/pr-sweep</strong><br>detects &amp; picks up</div>
+      <span class="flywheel-arrow">&rarr;</span>
+      <div class="flywheel-step"><strong>/review-as-ajay</strong><br>applies standards</div>
+      <span class="flywheel-arrow">&rarr;</span>
+      <div class="flywheel-step">Inline comments<br>posted to GitHub</div>
+      <span class="flywheel-arrow">&rarr;</span>
+      <div class="flywheel-step" style="border-color:var(--accent);background:#E8E7FD;"><strong>/resolve-team-member</strong><br>finds dev on Slack</div>
+      <span class="flywheel-arrow">&rarr;</span>
+      <div class="flywheel-step">Dev notified<br>on Slack</div>
+    </div>
+  </article>
+
+  <!-- ==================== SLIDE 7: ECOSYSTEM ==================== -->
+  <article class="slide slide-content">
+    <div class="slide-logo"><img src="https://cdn.prod.website-files.com/67481eccf2e8301c5e603202/67624379672c91fd72b6b25e_Saras-logo.svg" alt="Saras" height="28"></div>
+    <div class="eyebrow">BIGGER THAN CLAUDE</div>
+    <h2>Skills are an <span class="accent">open standard</span></h2>
+
+    <ul class="bullets">
+      <li>
+        <span class="bullet-title">One skill, many agents</span>
+        <span class="bullet-sub">Agent Skills is an open format by Anthropic, now adopted by 30+ tools. Write a skill once, use it in Claude Code, Cursor, Gemini CLI, Copilot, Kiro, and more.</span>
+      </li>
+      <li>
+        <span class="bullet-title">A skill is just a folder with a SKILL.md</span>
+        <span class="bullet-sub">Metadata + instructions + optional scripts. No proprietary plugin system. Version-controlled, portable, shareable.</span>
+      </li>
+      <li>
+        <span class="bullet-title">Progressive disclosure keeps it lightweight</span>
+        <span class="bullet-sub">Agents load only the name &amp; description at startup. Full instructions load only when a task matches. Many skills, tiny context footprint.</span>
+      </li>
+    </ul>
+
+    <div class="eco-row">
+      <div class="eco-pill"><strong>Claude Code</strong></div>
+      <div class="eco-pill"><strong>Cursor</strong></div>
+      <div class="eco-pill"><strong>Gemini CLI</strong></div>
+      <div class="eco-pill"><strong>GitHub Copilot</strong></div>
+      <div class="eco-pill"><strong>VS Code</strong></div>
+      <div class="eco-pill"><strong>Kiro</strong></div>
+      <div class="eco-pill"><strong>Roo Code</strong></div>
+      <div class="eco-pill"><strong>OpenHands</strong></div>
+      <div class="eco-pill">+25 more</div>
+    </div>
+
+    <p style="font-size:14px;color:var(--text-muted);margin-top:12px;">Explore the full ecosystem at <code class="inline">agentskills.io</code></p>
+  </article>
+
+  <!-- ==================== SLIDE 8: GET STARTED ==================== -->
+  <article class="slide slide-content">
+    <div class="slide-logo"><img src="https://cdn.prod.website-files.com/67481eccf2e8301c5e603202/67624379672c91fd72b6b25e_Saras-logo.svg" alt="Saras" height="28"></div>
+    <div class="eyebrow">YOUR TURN</div>
+    <h2>Start with <span class="accent">one</span> skill</h2>
+    <ul class="bullets" style="margin-bottom:24px;">
+      <li>
+        <span class="bullet-title">Pick your most repetitive workflow</span>
+        <span class="bullet-sub">The process you explain the same way every time. Not a reference doc &mdash; a sequence of steps with a clear outcome.</span>
+      </li>
+      <li>
+        <span class="bullet-title">Write steps, not essays</span>
+        <span class="bullet-sub">Numbered steps. Exit criteria. Anti-rationalization table. Drop it in <code class="inline">~/.claude/skills/</code> and it's live.</span>
+      </li>
+      <li>
+        <span class="bullet-title">Iterate from real usage</span>
+        <span class="bullet-sub">Every time the agent takes a shortcut, add a rule. The skill gets smarter &mdash; like encoding your team's institutional knowledge.</span>
+      </li>
+    </ul>
+    <div style="font-size:14px;color:var(--text-muted);line-height:1.55;max-width:560px;padding:12px 16px;background:var(--surface-2);border-radius:var(--radius);">
+      <strong>The litmus test:</strong> If you could paste it into a PR checklist and a human could follow it step by step, it's a skill. If it reads like a style guide, it's reference material &mdash; and agents will skip it.
+    </div>
+  </article>
+
+  <!-- ==================== SLIDE 9: META ==================== -->
+  <article class="slide slide-content">
+    <div class="slide-logo"><img src="https://cdn.prod.website-files.com/67481eccf2e8301c5e603202/67624379672c91fd72b6b25e_Saras-logo.svg" alt="Saras" height="28"></div>
+    <div class="eyebrow">BEHIND THE SCENES</div>
+    <h2 style="margin-bottom: 20px;">This deck was built with <span class="accent">/slide-deck</span></h2>
+    <p style="font-size:15px;color:var(--text-muted);max-width:560px;line-height:1.55;margin-bottom:12px;">One prompt. One branded HTML deck. Zero manual formatting. Here's what the skill's skeleton looks like inside:</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;">
+      <!-- Left: skeleton -->
+      <div class="meta-card" style="margin:0;max-width:none;">
+        <div class="meta-label">INSIDE /SLIDE-DECK</div>
+        <div class="meta-skeleton"><span class="sk-key">---
+name:</span> slide-deck
+<span class="sk-key">description:</span> Builds self-contained HTML slide decks
+<span class="sk-key">---</span>
+
+<span class="sk-section">## Steps</span>
+<span class="sk-key">1.</span> Parse topic &mdash; detect Saras branding
+<span class="sk-key">2.</span> Plan slide sequence
+<span class="sk-key">3.</span> Apply design system
+<span class="sk-key">4.</span> Build HTML &mdash; scroll-snap, keyboard nav
+<span class="sk-key">5.</span> Verify &mdash; 100vh, nav, counter
+
+<span class="sk-section">## Exit Criteria</span>
+- Single .html, zero deps, under 150KB
+- Nav + counter all functional
+
+<span class="sk-section">## Anti-Rationalization</span>
+"15 slides will cover everything"
+&rarr; 5&ndash;8 is the sweet spot.</div>
+      </div>
+
+      <!-- Right: cost comparison -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="border:1.5px solid #f3d5d5;border-radius:var(--radius);padding:18px 22px;background:var(--surface);flex:1;">
+          <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--bad);margin-bottom:10px;">Without the skill</div>
+          <div style="font-family:var(--font-serif);font-size:40px;font-weight:700;line-height:1;letter-spacing:-0.03em;">~200K</div>
+          <div style="font-size:14px;color:var(--text-muted);margin-top:6px;">tokens across 8+ prompts</div>
+          <div style="font-family:var(--font-mono);font-size:16px;color:var(--bad);margin-top:8px;font-weight:500;">~$3.50</div>
+        </div>
+        <div style="border:1.5px solid #d5e8d5;border-radius:var(--radius);padding:18px 22px;background:var(--surface);flex:1;">
+          <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--good);margin-bottom:10px;">With /slide-deck</div>
+          <div style="font-family:var(--font-serif);font-size:40px;font-weight:700;line-height:1;letter-spacing:-0.03em;">~80K</div>
+          <div style="font-size:14px;color:var(--text-muted);margin-top:6px;">tokens in a single invocation</div>
+          <div style="font-family:var(--font-mono);font-size:16px;color:var(--good);margin-top:8px;font-weight:500;">~$1.20</div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:15px;color:var(--accent);margin-top:14px;font-weight:500;">One prompt in. One branded deck out. ~60% fewer tokens.</p>
+  </article>
+
+</div>
+
+<!-- Navigation chrome -->
+<button class="nav-arrow prev" aria-label="Previous slide">&lsaquo;</button>
+<button class="nav-arrow next" aria-label="Next slide">&rsaquo;</button>
+<div class="slide-dots"></div>
+<div class="slide-counter">1 / 9</div>
+
+<script>
+  // === SKILL EXPLORER DATA ===
+  const skills = [
+    {
+      name: '/pr-sweep',
+      oneliner: 'Sweeps Slack DMs for PR review requests, reviews each PR using team standards, posts GitHub reviews with inline comments, notifies the developer on Slack, and tracks metrics. One command replaces a 15-minute manual workflow.',
+      skeleton: `<span class="sk-key">---
+name:</span> pr-sweep
+<span class="sk-key">description:</span> Sweep Slack DMs for PR reviews
+<span class="sk-key">---</span>
+
+<span class="sk-section">## Steps</span>
+<span class="sk-key">1.</span> Read unread Slack DMs for PR links
+<span class="sk-key">2.</span> For each PR found:
+   a. Fetch diff via <span class="sk-key">gh pr diff</span>
+   b. Run <span class="sk-key">/review-as-ajay</span> on the diff
+   c. Post review to GitHub with inline comments
+   d. Notify developer on Slack with summary
+<span class="sk-key">3.</span> Log metrics (PRs reviewed, issues found)
+
+<span class="sk-section">## Exit Criteria</span>
+- Every PR link in DMs has a posted GitHub review
+- Developer notified on Slack with review link
+- Metrics logged to PostHog
+
+<span class="sk-section">## Anti-Rationalization</span>
+"This PR is too small to review" &rarr; Small PRs
+  hide the subtlest bugs. Review every one.
+"I'll batch-notify later" &rarr; Notify immediately.
+  Developers context-switch; delay costs them.`
+    },
+    {
+      name: '/review-as-ajay',
+      oneliner: 'Reviews code quality in PRs with the exact standards our CTO Ajay enforces &mdash; naming conventions, method length, documentation, idiomatic patterns, string construction, and logging. Like having Ajay review every PR, 24/7.',
+      skeleton: `<span class="sk-key">---
+name:</span> review-as-ajay
+<span class="sk-key">description:</span> Code quality review with team standards
+<span class="sk-key">---</span>
+
+<span class="sk-section">## Steps</span>
+<span class="sk-key">1.</span> Fetch PR diff via gh pr diff
+<span class="sk-key">2.</span> Review <span class="sk-key">changed lines only</span> against checklist:
+   &bull; Variable names &rarr; nouns that describe purpose
+   &bull; Method names &rarr; verbs that describe behavior
+   &bull; Method body matches its name (no side effects)
+   &bull; Public methods have doc comments
+   &bull; Method length &lt; 40 lines
+   &bull; Idiomatic code per language
+   &bull; No complex nested expressions
+<span class="sk-key">3.</span> For each issue: cite file, line, snippet, fix
+
+<span class="sk-section">## Exit Criteria</span>
+- Structured report per PR with actionable fixes
+- Each issue has file:line and corrected example
+
+<span class="sk-section">## Anti-Rationalization</span>
+"The naming is fine, everyone knows what x means"
+&rarr; Code is read 10x more than it's written.
+  Names must reveal intent without context.`
+    },
+    {
+      name: '/save-conversation',
+      oneliner: 'Archives the current conversation\'s decisions, artifacts, and context to a dedicated GitHub repo. Creates a searchable history of AI-assisted work sessions that any future conversation can reference.',
+      skeleton: `<span class="sk-key">---
+name:</span> save-conversation
+<span class="sk-key">description:</span> Archive conversation context to GitHub
+<span class="sk-key">---</span>
+
+<span class="sk-section">## Steps</span>
+<span class="sk-key">1.</span> Synthesize conversation into structured doc:
+   - Title, date, project context
+   - Key decisions made
+   - Artifacts created/changed
+   - Next steps / open TODOs
+   - Tags for searchability
+<span class="sk-key">2.</span> Clone the archive repo (shallow)
+<span class="sk-key">3.</span> Write markdown to <span class="sk-key">project/date-slug.md</span>
+<span class="sk-key">4.</span> Commit and push
+
+<span class="sk-section">## Exit Criteria</span>
+- Markdown file committed to GitHub
+- Contains all decisions + artifacts + next steps
+- File is findable by tags and date
+
+<span class="sk-section">## When NOT to Use</span>
+- Trivial conversations not worth archiving
+- Code snippets &rarr; just commit them directly
+- Session memory &rarr; use Claude's memory system`
+    },
+    {
+      name: '/interactive-explainer',
+      oneliner: 'Builds a self-contained HTML page that teaches a concept through interactive demos, animations, and layered prose. Not a summary &mdash; a learning tool. The reader walks away able to explain the concept to someone else.',
+      skeleton: `<span class="sk-key">---
+name:</span> interactive-explainer
+<span class="sk-key">description:</span> Build interactive HTML concept explainers
+<span class="sk-key">---</span>
+
+<span class="sk-section">## Steps</span>
+<span class="sk-key">1.</span> Research the topic (fetch URLs if provided)
+<span class="sk-key">2.</span> Decompose into teachable layers:
+   headline &rarr; intuition &rarr; mechanics &rarr; implications
+<span class="sk-key">3.</span> Build at least <span class="sk-key">one interactive demo</span>
+   (sliders, buttons, animated SVG, Canvas)
+<span class="sk-key">4.</span> Write prose for a <span class="sk-key">curious beginner</span>:
+   - No unexplained jargon
+   - Lead with analogy, not definition
+   - One idea per paragraph
+<span class="sk-key">5.</span> Output single .html file, zero dependencies
+
+<span class="sk-section">## Exit Criteria</span>
+- Reader can explain the concept to someone else
+- At least one working interactive element
+- All CSS/JS inline, works offline
+
+<span class="sk-section">## Anti-Rationalization</span>
+"This topic is too simple for interactivity"
+&rarr; If it's simple, the demo will be small.
+  Interactivity aids retention even for basics.`
+    }
+  ];
+
+  function showSkill(index) {
+    document.querySelectorAll('.skill-tab').forEach((t, i) => t.classList.toggle('active', i === index));
+    const s = skills[index];
+    document.getElementById('skill-panel').innerHTML = `
+      <div class="panel-title">${s.name}</div>
+      <div class="panel-oneliner">${s.oneliner}</div>
+      <div class="skeleton-block">${s.skeleton}</div>
+    `;
+  }
+  showSkill(0);
+
+  // === EVOLUTION TOGGLE ===
+  function showEvo(stage) {
+    document.querySelectorAll('.evo-stage-btn').forEach((b, i) => b.classList.toggle('active', i === stage));
+    document.querySelectorAll('.evo-panel').forEach((p, i) => p.classList.toggle('active', i === stage));
+  }
+
+  // === SLIDE NAV ===
+  const deck = document.querySelector('.deck');
+  const slides = document.querySelectorAll('.slide');
+  const dotsContainer = document.querySelector('.slide-dots');
+  const counter = document.querySelector('.slide-counter');
+  let current = 0;
+
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.onclick = () => goTo(i);
+    dotsContainer.appendChild(dot);
+  });
+  const dots = document.querySelectorAll('.dot');
+
+  function goTo(n) {
+    n = Math.max(0, Math.min(n, slides.length - 1));
+    slides[n].scrollIntoView({ behavior: 'smooth' });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+  });
+
+  document.querySelector('.nav-arrow.prev').onclick = () => goTo(current - 1);
+  document.querySelector('.nav-arrow.next').onclick = () => goTo(current + 1);
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        current = Array.from(slides).indexOf(entry.target);
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        if (counter) counter.textContent = `${current + 1} / ${slides.length}`;
+      }
+    });
+  }, { root: deck, threshold: 0.5 });
+  slides.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
